@@ -283,6 +283,7 @@ export const useActions = () => {
 
 			nodes.push(node);
 
+			// This is where the extra nodes are placed
 			switch (node.type) {
 				case SPLIT_IN_BATCHES_NODE_TYPE: {
 					const splitInBatchesIndex = index;
@@ -304,6 +305,25 @@ export const useActions = () => {
 					);
 					break;
 				}
+				case 'n8n-nodes-base.unitTestTrigger': {
+					const unitTestTrigger = index;
+					const noOpIndex = unitTestTrigger + 1;
+					nodes.push({
+						type: NO_OP_NODE_TYPE,
+						isAutoAdd: true,
+						name: 'Test Logic Here',
+					});
+					connections.push({
+						from: { nodeIndex: unitTestTrigger },
+						to: { nodeIndex: noOpIndex },
+					});
+					break;
+				}
+				// case MY CUSTOM NODE: {
+				// all the same stuff as above
+				// we will want it to add a nothing node labeled 'stuff to test'
+				// and a test check node labeled test expect
+				// }
 			}
 		});
 

@@ -1,0 +1,14 @@
+{
+	"node": "n8n-nodes-base.unitTestTrigger",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Core Nodes"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": ""
+			}
+		],
+		"generic": []
+	}
+}
