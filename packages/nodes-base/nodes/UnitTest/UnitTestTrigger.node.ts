@@ -26,13 +26,6 @@ export class UnitTestTrigger implements INodeType {
 		outputs: [NodeConnectionType.Main],
 		properties: [
 			{
-				displayName:
-					'This node needs to be matched with a `Test Evaluation` node in order to work properly. The ID value must be the same in both',
-				name: 'notice',
-				type: 'notice',
-				default: '',
-			},
-			{
 				displayName: 'Test ID', // The value the user sees in the UI
 				name: 'testId', // The name used to reference the element UI within the code
 				type: 'string',
@@ -42,48 +35,109 @@ export class UnitTestTrigger implements INodeType {
 				description: 'The ID of the test. The Evaluation node MUST be set with the same ID.',
 			},
 			{
-				displayName: 'Metadata',
-				name: 'metadataUi',
-				placeholder: 'Add Metadata',
+				displayName:
+					'Each new "Test Run" item will be another test ran. You can have both key-value and JSON runs, the JSON runs will run after the key-value.',
+				name: 'notice',
+				type: 'notice',
+				default: '',
+			},
+			{
+				displayName: 'Key Value Test Data',
+				name: 'testData',
 				type: 'fixedCollection',
 				default: {},
+				placeholder: 'Add Test Run',
 				typeOptions: {
 					multipleValues: true,
 				},
-				description: 'This is description',
 				options: [
 					{
-						name: 'metadataValues',
-						displayName: 'Metadata',
+						name: 'testDataKeyValueGroups',
+						displayName: 'testData',
+						default: {},
 						values: [
 							{
-								displayName: 'Name',
-								name: 'name',
-								type: 'string',
-								default: 'Name of the metadata key to add.',
-							},
-							{
-								displayName: 'Value',
-								name: 'value',
-								type: 'string',
-								default: '',
-								description: 'Value to set for the metadata key',
+								displayName: 'Test Run',
+								name: 'testRun',
+								type: 'fixedCollection',
+								default: {},
+								placeholder: 'Add Key-Value Pair',
+								typeOptions: {
+									multipleValues: true,
+								},
+								options: [
+									{
+										name: 'keyValueData',
+										displayName: 'Key Value Data',
+										values: [
+											{
+												displayName: 'Key',
+												name: 'key',
+												type: 'string',
+												default: '',
+												placeholder: 'email',
+												required: true,
+											},
+											{
+												displayName: 'Value',
+												name: 'value',
+												type: 'string',
+												default: '',
+												description: 'Email@example.com',
+												required: true,
+											},
+										],
+									},
+								],
 							},
 						],
 					},
 				],
 			},
+
+			{
+				displayName: 'JSON Test Data',
+				name: 'jsonTestData',
+				type: 'fixedCollection',
+				default: {},
+				placeholder: 'Add Test Run',
+				typeOptions: {
+					multipleValues: true,
+				},
+				options: [
+					{
+						name: 'keyValueData',
+						displayName: 'Key Value Data',
+						values: [
+							{
+								displayName: 'Test Run',
+								name: 'jsonTestRun',
+								type: 'json',
+								default: '{\n  "keyOne": "ValueOne",\n  "keyTwo": "ValueTwo"\n}',
+							},
+						],
+					},
+				],
+			},
+
 			{
 				displayName: 'Additional Fields',
 				name: 'additionalFields',
 				type: 'collection',
 				default: {},
-				placeholder: 'Add Field',
+				placeholder: 'Add Additional Field',
 				options: [
+					{
+						displayName: 'Yes or No',
+						name: 'placeholder',
+						type: 'boolean',
+						default: true, // Initial state of the toggle
+						description: 'Whether to wait for the image or not',
+					},
 					{
 						displayName: 'Mock Nodes',
 						name: 'mockNodes',
-						placeholder: 'Add attendees',
+						placeholder: 'Add Mock Node',
 						type: 'fixedCollection',
 						// eslint-disable-next-line n8n-nodes-base/node-param-description-miscased-json
 						description:
@@ -98,6 +152,17 @@ export class UnitTestTrigger implements INodeType {
 								displayName: 'mockNodeValue',
 								values: [
 									{
+										displayName: 'Index To Place Mock Node Item',
+										name: 'mockNodeIndex',
+										type: 'number',
+										required: true,
+										typeOptions: {
+											minValue: 0,
+											numberPrecision: 0, // no decimals allowed
+										},
+										default: 0,
+									},
+									{
 										displayName: 'Node Name',
 										name: 'nodeName',
 										type: 'string',
@@ -110,7 +175,7 @@ export class UnitTestTrigger implements INodeType {
 										displayName: 'Content (JSON)',
 										name: 'jsonContent',
 										type: 'json',
-										default: '',
+										default: '{\n  "keyOne": "ValueOne",\n  "keyTwo": "ValueTwo"\n}',
 										description: 'The mock JSON for this node',
 									},
 								],
@@ -123,6 +188,11 @@ export class UnitTestTrigger implements INodeType {
 	};
 
 	async trigger(this: ITriggerFunctions): Promise<ITriggerResponse> {
+		//TODO: make an error if no data is passed in (right?)
+		//TODO: make an error if there is no evaluation node downstream with matching ID
+		//TODO: Decide whether to add index input for node additional field
+		// that might be required because
+
 		return {};
 	}
 }

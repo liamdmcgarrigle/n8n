@@ -306,8 +306,10 @@ export const useActions = () => {
 					break;
 				}
 				case 'n8n-nodes-base.unitTestTrigger': {
+					// nodes[0].name = 'thing 123'; // Can rename nodes like this
 					const unitTestTrigger = index;
 					const noOpIndex = unitTestTrigger + 1;
+					const unitTestEvaluationIndex = noOpIndex + 1;
 					nodes.push({
 						type: NO_OP_NODE_TYPE,
 						isAutoAdd: true,
@@ -317,13 +319,17 @@ export const useActions = () => {
 						from: { nodeIndex: unitTestTrigger },
 						to: { nodeIndex: noOpIndex },
 					});
+					nodes.push({
+						type: NO_OP_NODE_TYPE,
+						isAutoAdd: true,
+						name: 'Unit Test Evaluation',
+					});
+					connections.push({
+						from: { nodeIndex: noOpIndex },
+						to: { nodeIndex: unitTestEvaluationIndex },
+					});
 					break;
 				}
-				// case MY CUSTOM NODE: {
-				// all the same stuff as above
-				// we will want it to add a nothing node labeled 'stuff to test'
-				// and a test check node labeled test expect
-				// }
 			}
 		});
 
