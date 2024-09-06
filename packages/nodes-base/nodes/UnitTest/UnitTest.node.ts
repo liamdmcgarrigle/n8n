@@ -9,30 +9,19 @@ import {
 	IExecuteFunctions,
 	INodeParameters,
 } from 'n8n-workflow';
-// eslint-disable-next-line unused-imports/no-unused-imports
-// import { configuredInputs } from './utils';
-
-//TODO: Move this to util folder
-const configuredInputs = (parameters: INodeParameters) => {
-	const operation = parameters.operation as string;
-
-	if (operation === 'booleanInputComparison') {
-		const inputBranches: String[] = ['pass', 'fail'] as const; // Sets the branches
-		const inputArray = inputBranches.map((branch) => {
-			return {
-				type: `${NodeConnectionType.Main}`,
-				displayName: branch,
-			};
-		});
-		return inputArray;
-	} else {
-		return [
-			{
-				type: `${NodeConnectionType.Main}`,
-			},
-		];
-	}
-};
+import {
+	testIDField,
+	evaluationModeSelection,
+	comparisonEvaluationFields,
+	booleanEvaluationFields,
+	additionalFields,
+} from './UnitTestDescriptions';
+import {
+	nodeInputs,
+	nodeOutputs,
+	cleanUpBranchDefault,
+	failBranchDefault,
+} from './GenericFunctions';
 
 export class UnitTest implements INodeType {
 	description: INodeTypeDescription = {
@@ -47,102 +36,17 @@ export class UnitTest implements INodeType {
 		defaults: {
 			name: 'Unit Test Evaluation',
 		},
-
-		inputs: `={{(${configuredInputs})($parameter)}}`,
-		outputs: [NodeConnectionType.Main],
+		inputs: `={{(${nodeInputs})($parameter)}}`,
+		outputs: `={{(${nodeOutputs})($parameter,${cleanUpBranchDefault}, ${failBranchDefault})}}`,
+		// outputs: [NodeConnectionType.Main],
 		properties: [
-			{
-				displayName: 'Test ID', // The value the user sees in the UI
-				name: 'testId', // The name used to reference the element UI within the code
-				type: 'string',
-				required: true, // Whether the field is required or not
-				placeholder: 'aB3dE9Xz',
-				default: '',
-				description: 'The ID of the test. The Trigger node MUST be set with the same ID.',
-			},
-			{
-				displayName: 'Evaluation Mode',
-				name: 'operation',
-				type: 'options',
-				noDataExpression: true,
-				// eslint-disable-next-line n8n-nodes-base/node-param-options-type-unsorted-items
-				options: [
-					{
-						name: 'Comparison Evaluation',
-						value: 'comparisonEvaluation',
-						action: 'Comparison evaluation',
-						description:
-							'Evaluate the input data similar to an if node, with true being a passed test',
-					},
-					{
-						name: 'Boolean Input Evaluation',
-						value: 'booleanInputComparison',
-						action: 'Boolean input evaluation',
-						description:
-							'Evaluate a test based on the input branch, best for testing if nodes or paths taken',
-					},
-				],
-				default: 'comparisonEvaluation',
-			},
-			{
-				displayName:
-					'This pass or fail each test based on the input into the node from the test.<br><br>This is ideal for testing if statements of which branch was taken.',
-				name: 'notice',
-				type: 'notice',
-				displayOptions: {
-					show: {
-						operation: ['booleanInputComparison'],
-					},
-				},
-				default: '',
-			},
-			{
-				displayName: 'Conditions',
-				name: 'conditions',
-				placeholder: 'Add Condition',
-				type: 'filter',
-				default: {},
-				displayOptions: {
-					show: {
-						operation: ['comparisonEvaluation'],
-					},
-				},
-				typeOptions: {
-					filter: {
-						// Use the user options (below) to determine filter behavior
-						caseSensitive: '={{!$parameter.options.ignoreCase}}',
-						typeValidation: '={{$parameter.options.looseTypeValidation ? "loose" : "strict"}}',
-					},
-				},
-			},
-			{
-				displayName: 'Options',
-				name: 'options',
-				type: 'collection',
-				placeholder: 'Add option',
-				default: {},
-				displayOptions: {
-					show: {
-						operation: ['comparisonEvaluation'],
-					},
-				},
-				options: [
-					{
-						displayName: 'Ignore Case',
-						description: 'Whether to ignore letter case when evaluating conditions',
-						name: 'ignoreCase',
-						type: 'boolean',
-						default: true,
-					},
-					{
-						displayName: 'Less Strict Type Validation',
-						description: 'Whether to try casting value types based on the selected operator',
-						name: 'looseTypeValidation',
-						type: 'boolean',
-						default: true,
-					},
-				],
-			},
+			...testIDField,
+			...evaluationModeSelection,
+
+			...comparisonEvaluationFields,
+			...booleanEvaluationFields,
+
+			...additionalFields,
 		],
 	};
 
