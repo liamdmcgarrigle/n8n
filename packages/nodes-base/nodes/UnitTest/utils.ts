@@ -1,10 +1,32 @@
-export function generateTestId(): string {
-	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	let result = '';
-	const length = 8;
-	for (let i = 0; i < length; i++) {
-		result += chars.charAt(Math.floor(Math.random() * length));
-	}
+import {
+	type ITriggerFunctions,
+	type INodeType,
+	type INodeTypeDescription,
+	type ITriggerResponse,
+	NodeConnectionType,
+	NodeOperationError,
+	INodeExecutionData,
+	IExecuteFunctions,
+	INodeParameters,
+} from 'n8n-workflow';
 
-	return result;
-}
+export const configuredInputs = (parameters: INodeParameters) => {
+	const operation = parameters.operation as string;
+
+	if (operation === 'booleanInputComparison') {
+		const inputBranches: String[] = ['pass', 'fail'] as const; // Sets the branches
+		const inputArray = inputBranches.map((branch) => {
+			return {
+				type: `${NodeConnectionType.Main}`,
+				displayName: branch,
+			};
+		});
+		return inputArray;
+	} else {
+		return [
+			{
+				type: `${NodeConnectionType.Main}`,
+			},
+		];
+	}
+};

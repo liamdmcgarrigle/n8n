@@ -1,9 +1,9 @@
 {
-	"node": "n8n-nodes-base.unitTestTrigger",
+	"node": "n8n-nodes-base.unitTest",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Core Nodes", "Utility"],
-	"alias": ["Test", "Automatic"],
+	"alias": ["Test", "Automatic", "Evaluate"],
 	"resources": {
 		"primaryDocumentation": [
 			{

@@ -320,7 +320,7 @@ export const useActions = () => {
 						to: { nodeIndex: noOpIndex },
 					});
 					nodes.push({
-						type: NO_OP_NODE_TYPE,
+						type: 'n8n-nodes-base.unitTest',
 						isAutoAdd: true,
 						name: 'Unit Test Evaluation',
 					});

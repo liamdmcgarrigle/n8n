@@ -6,7 +6,7 @@ import {
 	NodeConnectionType,
 } from 'n8n-workflow';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { generateTestId } from './utils';
+// import {} from './utils';
 
 export class UnitTestTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -36,7 +36,7 @@ export class UnitTestTrigger implements INodeType {
 			},
 			{
 				displayName:
-					'Each new "Test Run" item will be another test ran. You can have both key-value and JSON runs, the JSON runs will run after the key-value.',
+					'You can have both key-value and JSON runs, the JSON runs will run after the key-value',
 				name: 'notice',
 				type: 'notice',
 				default: '',

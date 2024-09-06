@@ -765,6 +765,7 @@
       "dist/nodes/Twitter/Twitter.node.js",
       "dist/nodes/Typeform/TypeformTrigger.node.js",
       "dist/nodes/UnitTest/UnitTestTrigger.node.js",
+      "dist/nodes/UnitTest/UnitTest.node.js",
       "dist/nodes/UnleashedSoftware/UnleashedSoftware.node.js",
       "dist/nodes/Uplead/Uplead.node.js",
       "dist/nodes/UProc/UProc.node.js",
