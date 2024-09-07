@@ -54,29 +54,31 @@ export class UnitTest implements INodeType {
 		const items = this.getInputData();
 		let item: INodeExecutionData;
 
+		// TODO: Figure out how to filter out non test runs from running tests
+		// option 1:
+		// use `this.getMode()` to get execution mode. We would need to add a unit test mode to that though
+		// option 2: look for the starting test ID trigger
+
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
 				item = items[itemIndex];
 
-				if (this.getNodeParameter('operation', 0) === 'createNewEvent') {
-					// const calendarId = this.getNodeParameter('calendarId', itemIndex, '') as string;
-					// const additionalFields = this.getNodeParameter('additionalFields', itemIndex) as IDataObject; // gets values under additionalFields
-					// const isPrivate = additionalFields.isPrivate as boolean;
-					// const color = additionalFields.color as string;
-					// const isAllDayEvent = additionalFields.isAllDayEvent as boolean;
-					// const location = additionalFields.location as string;
-					// const freeBusy = additionalFields.freeBusy as number;
-					// const attendees = additionalFields.attendees as IDataObject;
-					// const attendeesValues = attendees?.attendeesValues as attendeeObject | undefined;
-					// const url = additionalFields.url as string;
-					// const timeZone = this.getNodeParameter('timeZone',itemIndex, '') as string;
-					// const eventTitle = this.getNodeParameter('eventTitle',itemIndex, '') as string;
-					// const startTime = moment.tz(this.getNodeParameter('startTime', itemIndex, '') as string, timeZone );
-					// const endTime = moment.tz(this.getNodeParameter('endTime', itemIndex, '') as string, timeZone );
-					// const description = (this.getNodeParameter('eventDescription',itemIndex, '') as string).replace(/<br>/g, "\n");
+				// This line below is able to place values as if it was other nodes
+				// problem is it only works on execution nodes and not trigger nodes
+				// but that doesnt seem like it will work because it stops you if you try to run before that node with the error
+				// "Referenced node is unexecuted An expression references the node 'Edit Fields', but it hasn't been executed
+				// yet. Either change the expression, or re-wire your workflow to make sure that node executes first."
+				// this.getWorkflowDataProxy(itemIndex).$node['Edit Fields'].json['fake'] = 'placed fake value!';
+				// seems like i will need to figure out how to hack it after all
 
-					item.json['response'] = 'hi there';
-				}
+				// item.json['$data'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$data);
+				// item.json['$env'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$env);
+				item.json['$input'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$input);
+				item.json["$node['Edit Fields']"] = JSON.stringify(
+					this.getWorkflowDataProxy(itemIndex).$node['Edit Fields'],
+				);
+
+				item.json['$workflow'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$workflow);
 			} catch (error) {
 				// This node should never fail but we want to showcase how
 				// to handle errors.

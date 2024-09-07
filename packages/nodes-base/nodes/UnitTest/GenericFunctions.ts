@@ -78,3 +78,51 @@ export const nodeOutputs = (
 
 	return outputBranchArray;
 };
+
+export type RawKeyValueInputItems = {
+	testRun: {
+		keyValueData: Array<{ key: string; value: string }>;
+	};
+};
+
+export type ReturnNodeJson = {
+	json: {
+		[key: string]: string;
+	};
+};
+
+export interface RawJsonInput {
+	jsonTestRun: string;
+}
+
+export function getReturnNodeJsonFromKeyValue(
+	rawKeyValueData: RawKeyValueInputItems[],
+): ReturnNodeJson[] {
+	//return nothing if there is no input
+	if (rawKeyValueData === undefined) {
+		return [];
+	}
+
+	return rawKeyValueData.map((item) => {
+		const jsonObject: { [key: string]: string } = {};
+		if (Object.keys(item.testRun).length === 0) {
+			return { json: {} };
+		}
+		item.testRun.keyValueData.forEach(({ key, value }) => {
+			jsonObject[key] = value;
+		});
+		return { json: jsonObject };
+	});
+}
+
+export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): ReturnNodeJson[] {
+	//return nothing if there is no input
+	if (rawJsonInputData === undefined) {
+		return [];
+	}
+
+	return rawJsonInputData.map((item) => {
+		const parsedJson = JSON.parse(item.jsonTestRun);
+		return { json: parsedJson };
+	});
+}

@@ -98,8 +98,8 @@ export const jsonRunInputs: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'keyValueData',
-				displayName: 'Key Value Data',
+				name: 'jsonData',
+				displayName: 'JSON Data',
 				values: [
 					{
 						displayName: 'Test Run',
