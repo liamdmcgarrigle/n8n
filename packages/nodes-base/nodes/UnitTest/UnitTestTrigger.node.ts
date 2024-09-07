@@ -74,6 +74,9 @@ export class UnitTestTrigger implements INodeType {
 
 		const manualTriggerFunction = async () => {
 			this.emit([this.helpers.returnJsonArray(triggerOutputData)]);
+			// TODO: Replace that helper function with our own function that returns `INodeExecutionData[]`
+			// thats pretty much all that does, wraps it in data and json if it isn't already. see link below
+			// https://github.com/n8n-io/n8n/blob/6ea08560858c9601da33e72af8af47ab13b77266/packages/core/src/NodeExecuteFunctions.ts#L1741C73-L1741C91
 		};
 
 		return {
