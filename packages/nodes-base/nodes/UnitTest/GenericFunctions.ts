@@ -1,3 +1,5 @@
+import { error } from 'alasql';
+import { color } from 'minifaker';
 import {
 	type ITriggerFunctions,
 	type INodeType,
@@ -32,6 +34,8 @@ export const nodeInputs = (parameters: INodeParameters) => {
 		];
 	}
 };
+
+export const throwOnFailConst: boolean = false;
 
 // set default view values for `isCleanUpBranchEnabled` and `isFailBranchEnabled`
 // these values are used in the `nodeOutputs` function below as well as in the node config
@@ -73,6 +77,7 @@ export const nodeOutputs = (
 		outputBranchArray.push({
 			type: `${NodeConnectionType.Main}`,
 			displayName: 'On Fail',
+			category: 'error',
 		});
 	}
 
@@ -85,19 +90,44 @@ export type RawKeyValueInputItems = {
 	};
 };
 
-export type ReturnNodeJson = {
-	json: {
-		[key: string]: string;
-	};
-};
-
 export interface RawJsonInput {
 	jsonTestRun: string;
 }
 
+export interface MockNodeInput {
+	mockNodeIndex: number;
+	nodeName: string;
+	jsonContent: string;
+}
+
+export type TriggerReturnData = {
+	json: {
+		[key: string]: string | ComplexJsonData;
+	};
+};
+
+type ComplexJsonData = {
+	binary: Record<string, unknown>;
+	data: Record<string, string>;
+};
+
+export interface TestTriggerParameters {
+	testId: string;
+	notice: string;
+	testData: {
+		testDataKeyValueGroups: RawKeyValueInputItems[];
+	};
+	jsonTestData: {
+		jsonData: RawJsonInput[];
+	};
+	mockNodes: {
+		[key: string]: MockNodeInput[];
+	};
+}
+
 export function getReturnNodeJsonFromKeyValue(
 	rawKeyValueData: RawKeyValueInputItems[],
-): ReturnNodeJson[] {
+): TriggerReturnData[] {
 	//return nothing if there is no input
 	if (rawKeyValueData === undefined) {
 		return [];
@@ -115,7 +145,7 @@ export function getReturnNodeJsonFromKeyValue(
 	});
 }
 
-export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): ReturnNodeJson[] {
+export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): TriggerReturnData[] {
 	//return nothing if there is no input
 	if (rawJsonInputData === undefined) {
 		return [];
@@ -125,4 +155,14 @@ export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): Ret
 		const parsedJson = JSON.parse(item.jsonTestRun);
 		return { json: parsedJson };
 	});
+}
+
+// INodeExecutionData format
+// must have the json wrapped in a list, even if it is by itself
+//
+
+export function prepareTestData(nodeParams: MockNodeInput): INodeExecutionData[] {
+	const returnData: INodeExecutionData[] = [];
+
+	return returnData;
 }

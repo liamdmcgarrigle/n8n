@@ -1,5 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
-import { cleanUpBranchDefault, failBranchDefault } from './GenericFunctions';
+import { cleanUpBranchDefault, failBranchDefault, throwOnFailConst } from './GenericFunctions';
 
 // --------------------------------------------
 // --------TRIGGER AND EVALUATION NODES--------
@@ -115,6 +115,12 @@ export const jsonRunInputs: INodeProperties[] = [
 
 export const mockNodeInputs: INodeProperties[] = [
 	{
+		displayName: 'Mock nodes are currently not functional.',
+		name: 'notice',
+		type: 'notice',
+		default: '',
+	},
+	{
 		displayName: 'Mock Nodes',
 		name: 'mockNodes',
 		placeholder: 'Add Mock Node',
@@ -127,8 +133,8 @@ export const mockNodeInputs: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Mock Node Value',
-				displayName: 'mockNodeValue',
+				name: 'mockNodeValue',
+				displayName: 'Mock Node Value',
 				values: [
 					{
 						displayName: 'Index To Place Mock Node Item',
@@ -250,7 +256,7 @@ export const booleanEvaluationFields: INodeProperties[] = [
 		type: 'notice',
 		displayOptions: {
 			show: {
-				operation: ['booleanInputComparison'],
+				operation: ['booleanInputComparison', 'booleanInputComparison'],
 			},
 		},
 		default: '',
@@ -264,7 +270,19 @@ export const additionalFields: INodeProperties[] = [
 		type: 'collection',
 		default: {},
 		placeholder: 'Add Additional Field',
+		displayOptions: {
+			show: {
+				operation: ['comparisonEvaluation'],
+			},
+		},
 		options: [
+			{
+				displayName: 'Error on Fail?',
+				name: 'errorOnFail',
+				type: 'boolean',
+				default: throwOnFailConst, // only edit this value in the `/GenericFunctions.ts` file
+				description: 'Whether to throw an error when a test fails',
+			},
 			{
 				displayName: 'Fail Branch?',
 				name: 'isFailBranchEnabled',

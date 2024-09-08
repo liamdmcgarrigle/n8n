@@ -20,8 +20,10 @@ import {
 	getReturnNodeJsonFromKeyValue,
 	getReturnNodeJsonFromJson,
 	RawKeyValueInputItems,
-	ReturnNodeJson,
+	TriggerReturnData,
+	MockNodeInput,
 	RawJsonInput,
+	TestTriggerParameters,
 } from './GenericFunctions';
 
 export class UnitTestTrigger implements INodeType {
@@ -58,8 +60,12 @@ export class UnitTestTrigger implements INodeType {
 		// TODO: make an error if there is no evaluation node downstream with matching ID (might not work with matching id, only general node type, and probably need to use the n8n credential and api for it. Will do after i get everything else working)
 		// so i can actually get the name with the api and then use `getWorkflowDataProxy(itemIndex).$node["nodeName"].parameter["parameterName"] to check another workflows value
 
-		// Initialize the output array
-		let triggerOutputData: ReturnNodeJson[] = [];
+		// console.log(`this.getNode().parameters = ${JSON.stringify(this.getNode().parameters)}`);
+		// console.log(`this.getNode() = ${JSON.stringify(this.getNode())}`);
+		// `this.getNode().parameters` passes in the json below
+		// {"testId":"fhut6r5e","notice":"","testData":{"testDataKeyValueGroups":[{"testRun":{"keyValueData":[{"key":"thing","value":"thang"}]}}]},"jsonTestData":{"jsonData":[{"jsonTestRun":"{\n  \"thing\": \"nahhh\"\n}"}]},"mockNodes":{}}
+		// TODO: Change all of the triggerOutputData to a util function and just pass in the params
+		let triggerOutputData: TriggerReturnData[] = [];
 
 		const rawKeyValueData = (this.getNodeParameter('testData') as IDataObject)
 			.testDataKeyValueGroups as RawKeyValueInputItems[];

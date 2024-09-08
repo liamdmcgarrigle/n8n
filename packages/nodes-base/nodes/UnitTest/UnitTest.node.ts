@@ -8,6 +8,7 @@ import {
 	INodeExecutionData,
 	IExecuteFunctions,
 	INodeParameters,
+	IDataObject,
 } from 'n8n-workflow';
 import {
 	testIDField,
@@ -21,6 +22,7 @@ import {
 	nodeOutputs,
 	cleanUpBranchDefault,
 	failBranchDefault,
+	throwOnFailConst,
 } from './GenericFunctions';
 
 export class UnitTest implements INodeType {
@@ -58,10 +60,52 @@ export class UnitTest implements INodeType {
 		// option 1:
 		// use `this.getMode()` to get execution mode. We would need to add a unit test mode to that though
 		// option 2: look for the starting test ID trigger
+		const failedArray: INodeExecutionData[] = [];
+		const cleanUpArray: INodeExecutionData[] = [];
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
 				item = items[itemIndex];
+				let throwOnFail = (this.getNodeParameter('additionalFields', itemIndex) as IDataObject)
+					.errorOnFail;
+
+				if (throwOnFail === undefined) {
+					throwOnFail = throwOnFailConst;
+				}
+
+				if (this.getNodeParameter('operation', itemIndex) === 'comparisonEvaluation') {
+					let pass = false;
+
+					pass = this.getNodeParameter('evaluations', itemIndex, false, {
+						extractValue: true,
+					}) as boolean;
+
+					if (!pass) {
+						failedArray.push({
+							json: { ...item.json, UnitTestPass: pass ? 'true' : 'false' },
+						});
+
+						// throw error if set to fail
+						if (throwOnFail) {
+							throw new NodeOperationError(this.getNode(), 'Test Failed', {
+								itemIndex,
+							});
+						}
+					}
+
+					// throw new NodeOperationError(this.getNode(), 'failed test', {
+					// 	itemIndex,
+					// });
+
+					// item.json = {};
+					// item.json['unitTest'] = pass;
+				}
+
+				if (this.getNodeParameter('operation', itemIndex) === 'booleanInputComparison') {
+				}
+
+				// console.log(`this.getInputData()() = ${JSON.stringify(this.getInputData())}`);
+				// console.log(`this.this.getNodeInputs()() = ${JSON.stringify(this.getNodeInputs())}`);
 
 				// This line below is able to place values as if it was other nodes
 				// problem is it only works on execution nodes and not trigger nodes
@@ -73,22 +117,17 @@ export class UnitTest implements INodeType {
 
 				// item.json['$data'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$data);
 				// item.json['$env'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$env);
-				item.json['$input'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$input);
-				item.json["$node['Edit Fields']"] = JSON.stringify(
-					this.getWorkflowDataProxy(itemIndex).$node['Edit Fields'],
-				);
+				// item.json['$input'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$input);
+				// item.json["$node['Edit Fields']"] = JSON.stringify(
+				// 	this.getWorkflowDataProxy(itemIndex).$node['Edit Fields'],
+				// );
 
-				item.json['$workflow'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$workflow);
+				// item.json['$workflow'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$workflow);
 			} catch (error) {
-				// This node should never fail but we want to showcase how
-				// to handle errors.
 				if (this.continueOnFail()) {
 					items.push({ json: this.getInputData(itemIndex)[0].json, error, pairedItem: itemIndex });
 				} else {
-					// Adding `itemIndex` allows other workflows to handle this error
 					if (error.context) {
-						// If the error thrown already contains the context property,
-						// only append the itemIndex
 						error.context.itemIndex = itemIndex;
 						throw error;
 					}
@@ -99,6 +138,30 @@ export class UnitTest implements INodeType {
 			}
 		}
 
-		return this.prepareOutputData(items);
+		//
+		// CHECKS WHICH BRANCHES SHOULD OUTPUT
+		//
+
+		// gets current output branches
+		const outputBranches = nodeOutputs(
+			this.getNode().parameters,
+			cleanUpBranchDefault,
+			failBranchDefault,
+		);
+
+		// sets bool vars based on current output branches
+		const cleanUpExists =
+			outputBranches.find((item) => item.displayName === 'Clean Up') !== undefined;
+		const onFailExists =
+			outputBranches.find((item) => item.displayName === 'On Fail') !== undefined;
+
+		// outputs data based on which branches are active
+		if (!cleanUpExists && onFailExists) {
+			return [failedArray];
+		} else if (cleanUpExists && !onFailExists) {
+			return [cleanUpArray];
+		} else {
+			return [cleanUpArray, failedArray];
+		}
 	}
 }
