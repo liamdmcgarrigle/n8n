@@ -11,6 +11,7 @@ import {
 	IExecuteFunctions,
 	INodeParameters,
 	IDataObject,
+	NodeHelpers,
 } from 'n8n-workflow';
 
 export const nodeInputs = (parameters: INodeParameters) => {
@@ -157,12 +158,40 @@ export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): Tri
 	});
 }
 
-// INodeExecutionData format
-// must have the json wrapped in a list, even if it is by itself
-//
-
+// TODO: Replace the functions above with the one below
+// dont actually replace them, just use those as private inside of this one
 export function prepareTestData(nodeParams: MockNodeInput): INodeExecutionData[] {
 	const returnData: INodeExecutionData[] = [];
 
 	return returnData;
+}
+
+export function getNodeInputsData(this: IExecuteFunctions) {
+	const returnData: INodeExecutionData[][] = [];
+
+	const inputs = NodeHelpers.getConnectionTypes(this.getNodeInputs()).filter(
+		(type) => type === NodeConnectionType.Main,
+	);
+
+	for (let i = 0; i < inputs.length; i++) {
+		try {
+			returnData.push(this.getInputData(i) ?? []);
+		} catch (error) {
+			returnData.push([]);
+		}
+	}
+
+	return returnData;
+}
+
+export function triggerWithMatchingIdRan(node: IExecuteFunctions, testId: string) {
+	// return node.getExecuteData(); // returns execution data of current node including params, node type, data, and more
+	// return await node.getInputConnectionData(NodeConnectionType.Main, 0); // returns data from previous node, but i kept getting the error 'Node does not have a `supplyData` method defined'
+	// return node.getInputSourceData(0); // returns the name of the node that connects
+	// return node.getKnownNodeTypes(); // returns a list of all of the node types
+	// return node.getParentNodes('Unit Test Trigger'); // kept outputting empty array
+	// return node.getWorkflow(); // returns simple metadata of the workflow
+	// return node.getWorkflowDataProxy(0);
+	// return node.getMode(); // gets the execution mode, which in this case without modification is 'manual'
+	return node.getChildNodes('Unit Test Evaluation'); // gets the execution mode, which in this case without modification is 'manual'
 }

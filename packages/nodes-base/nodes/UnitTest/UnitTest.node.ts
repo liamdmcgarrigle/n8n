@@ -23,6 +23,8 @@ import {
 	cleanUpBranchDefault,
 	failBranchDefault,
 	throwOnFailConst,
+	getNodeInputsData,
+	triggerWithMatchingIdRan,
 } from './GenericFunctions';
 
 export class UnitTest implements INodeType {
@@ -39,6 +41,9 @@ export class UnitTest implements INodeType {
 			name: 'Unit Test Evaluation',
 		},
 		inputs: `={{(${nodeInputs})($parameter)}}`,
+		// requiredInputs: `={{(${nodeInputs})($parameter).length === 2 ? [0,1] : 1}}`,
+		// TODO: Figure this out. super annoyed by it
+		requiredInputs: [0, 1, 2],
 		outputs: `={{(${nodeOutputs})($parameter,${cleanUpBranchDefault}, ${failBranchDefault})}}`,
 		// outputs: [NodeConnectionType.Main],
 		properties: [
@@ -55,6 +60,17 @@ export class UnitTest implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		let item: INodeExecutionData;
+		// console.log(JSON.stringify(this.getNodeInputs()));
+
+		// TODO: Put function here to check for all of the node type unittesttrigger (not the actual name)
+		// and then loop over them to see all the ids, then find the correct ID, which then i can extract the name from,
+		// then i can check to see if the test trigger ran. only allow node to continue if test trigger with matching id ran
+		const testId = this.getNodeParameter('testId', 0) as string;
+		// if (!triggerWithMatchingIdRan(testId)){
+
+		// }
+
+		console.log(triggerWithMatchingIdRan(this, testId));
 
 		// TODO: Figure out how to filter out non test runs from running tests
 		// option 1:
@@ -63,26 +79,39 @@ export class UnitTest implements INodeType {
 		const failedArray: INodeExecutionData[] = [];
 		const cleanUpArray: INodeExecutionData[] = [];
 
+		// console.log(`THIS IS THE DROIDS: ${JSON.stringify(this.getInputData())}`);
+
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
+				// set val of item for better readability
 				item = items[itemIndex];
-				let throwOnFail = (this.getNodeParameter('additionalFields', itemIndex) as IDataObject)
-					.errorOnFail;
 
-				if (throwOnFail === undefined) {
-					throwOnFail = throwOnFailConst;
-				}
+				// set throwOnFail param. is a nasty ternary to get const
+				const throwOnFail = (this.getNodeParameter('additionalFields', itemIndex) as IDataObject)
+					.errorOnFail
+					? (this.getNodeParameter('additionalFields', itemIndex) as IDataObject).errorOnFail
+					: throwOnFailConst;
 
+				// set isCleanUpBranchEnabled param. is a nasty ternary to get const
+				const isCleanUpBranchEnabled = (
+					this.getNodeParameter('additionalFields', itemIndex) as IDataObject
+				).isCleanUpBranchEnabled
+					? ((this.getNodeParameter('additionalFields', itemIndex) as IDataObject)
+							.isCleanUpBranchEnabled as boolean)
+					: cleanUpBranchDefault;
+
+				// mutable var for test pass/fail
+				let pass = false;
+
+				// evaluations for comparisonEvaluation operation
 				if (this.getNodeParameter('operation', itemIndex) === 'comparisonEvaluation') {
-					let pass = false;
-
 					pass = this.getNodeParameter('evaluations', itemIndex, false, {
 						extractValue: true,
 					}) as boolean;
 
 					if (!pass) {
 						failedArray.push({
-							json: { ...item.json, UnitTestPass: pass ? 'true' : 'false' },
+							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
 						});
 
 						// throw error if set to fail
@@ -92,17 +121,24 @@ export class UnitTest implements INodeType {
 							});
 						}
 					}
+				} // end of evaluations for comparisonEvaluation operation
 
-					// throw new NodeOperationError(this.getNode(), 'failed test', {
-					// 	itemIndex,
-					// });
-
-					// item.json = {};
-					// item.json['unitTest'] = pass;
-				}
-
+				// evaluations for booleanInputComparison operation
 				if (this.getNodeParameter('operation', itemIndex) === 'booleanInputComparison') {
+					// this.getInputSourceData(0, inputName) // I think this is how we get the branches?
+					// prob need to do that at the top of the func though
+					//
+					// this.getInputConnectionData()
+					// console.log(this.getInputData());
+					// console.log(`THIS IS THE DROIDS: ${JSON.stringify(this.getInputData())}`);
 				}
+
+				// adds each test run data to clean up branch output array, even failed runs
+				if (isCleanUpBranchEnabled) {
+					cleanUpArray.push({
+						json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+					});
+				} // end of evaluations for booleanInputComparison operation
 
 				// console.log(`this.getInputData()() = ${JSON.stringify(this.getInputData())}`);
 				// console.log(`this.this.getNodeInputs()() = ${JSON.stringify(this.getNodeInputs())}`);

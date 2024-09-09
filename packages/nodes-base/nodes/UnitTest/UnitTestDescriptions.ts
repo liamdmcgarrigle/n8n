@@ -270,11 +270,6 @@ export const additionalFields: INodeProperties[] = [
 		type: 'collection',
 		default: {},
 		placeholder: 'Add Additional Field',
-		displayOptions: {
-			show: {
-				operation: ['comparisonEvaluation'],
-			},
-		},
 		options: [
 			{
 				displayName: 'Error on Fail?',
