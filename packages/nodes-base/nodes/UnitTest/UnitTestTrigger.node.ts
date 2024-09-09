@@ -1,13 +1,10 @@
-import {
-	type ITriggerFunctions,
-	type INodeType,
-	type INodeTypeDescription,
-	type ITriggerResponse,
-	NodeConnectionType,
+import { NodeConnectionType } from 'n8n-workflow';
+import type {
 	IDataObject,
-	INodeExecutionData,
-	IExecuteFunctions,
-	NodeOperationError,
+	ITriggerFunctions,
+	INodeType,
+	INodeTypeDescription,
+	ITriggerResponse,
 } from 'n8n-workflow';
 import {
 	testIDField,
@@ -16,15 +13,8 @@ import {
 	jsonRunInputs,
 	mockNodeInputs,
 } from './UnitTestDescriptions';
-import {
-	getReturnNodeJsonFromKeyValue,
-	getReturnNodeJsonFromJson,
-	RawKeyValueInputItems,
-	TriggerReturnData,
-	MockNodeInput,
-	RawJsonInput,
-	TestTriggerParameters,
-} from './GenericFunctions';
+import type { RawKeyValueInputItems, TriggerReturnData, RawJsonInput } from './GenericFunctions';
+import { getReturnNodeJsonFromKeyValue, getReturnNodeJsonFromJson } from './GenericFunctions';
 
 export class UnitTestTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -65,7 +55,7 @@ export class UnitTestTrigger implements INodeType {
 		// `this.getNode().parameters` passes in the json below
 		// {"testId":"fhut6r5e","notice":"","testData":{"testDataKeyValueGroups":[{"testRun":{"keyValueData":[{"key":"thing","value":"thang"}]}}]},"jsonTestData":{"jsonData":[{"jsonTestRun":"{\n  \"thing\": \"nahhh\"\n}"}]},"mockNodes":{}}
 		// TODO: Change all of the triggerOutputData to a util function and just pass in the params
-		let triggerOutputData: TriggerReturnData[] = [];
+		const triggerOutputData: TriggerReturnData[] = [];
 
 		const rawKeyValueData = (this.getNodeParameter('testData') as IDataObject)
 			.testDataKeyValueGroups as RawKeyValueInputItems[];

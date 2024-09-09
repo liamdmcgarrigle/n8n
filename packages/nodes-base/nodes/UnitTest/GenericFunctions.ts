@@ -1,25 +1,17 @@
-import { error } from 'alasql';
-import { color } from 'minifaker';
-import {
-	type ITriggerFunctions,
-	type INodeType,
-	type INodeTypeDescription,
-	type ITriggerResponse,
-	NodeConnectionType,
-	NodeOperationError,
+import type {
 	INodeExecutionData,
 	IExecuteFunctions,
 	INodeParameters,
 	IDataObject,
-	NodeHelpers,
 } from 'n8n-workflow';
+import { NodeConnectionType, NodeHelpers } from 'n8n-workflow';
 
 export const nodeInputs = (parameters: INodeParameters) => {
 	// get the current parameter `operation` from the node
 	const operation = parameters.operation as string;
 
 	if (operation === 'booleanInputComparison') {
-		const inputBranches: String[] = ['pass', 'fail'] as const; // Sets the branches
+		const inputBranches: string[] = ['pass', 'fail'] as const; // Sets the branches
 		const inputArray = inputBranches.map((branch) => {
 			return {
 				type: `${NodeConnectionType.Main}`,
@@ -45,7 +37,9 @@ export const failBranchDefault: boolean = true;
 
 export const nodeOutputs = (
 	parameters: INodeParameters,
+	// eslint-disable-next-line @typescript-eslint/no-shadow
 	cleanUpBranchDefault: boolean,
+	// eslint-disable-next-line @typescript-eslint/no-shadow
 	failBranchDefault: boolean,
 ) => {
 	// due to the way the n8n node build system works, the `cleanUpBranchDefault`
@@ -63,7 +57,7 @@ export const nodeOutputs = (
 	const isFailBranchEnabled = failBranchInput !== undefined ? failBranchInput : failBranchDefault;
 
 	// creates array to return
-	let outputBranchArray = [];
+	const outputBranchArray = [];
 
 	// adds cleanup branch if user has it enabled
 	if (isCleanUpBranchEnabled) {
@@ -101,10 +95,12 @@ export interface MockNodeInput {
 	jsonContent: string;
 }
 
+type TriggerJsonData = {
+	[key: string]: string | ComplexJsonData;
+};
+
 export type TriggerReturnData = {
-	json: {
-		[key: string]: string | ComplexJsonData;
-	};
+	json: TriggerJsonData;
 };
 
 type ComplexJsonData = {
@@ -152,14 +148,20 @@ export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): Tri
 		return [];
 	}
 
-	return rawJsonInputData.map((item) => {
-		const parsedJson = JSON.parse(item.jsonTestRun);
+	return rawJsonInputData.map((item: RawJsonInput) => {
+		let parsedJson: TriggerJsonData;
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			parsedJson = JSON.parse(item.jsonTestRun);
+		} catch (e) {
+			throw e;
+		}
 		return { json: parsedJson };
 	});
 }
 
 // TODO: Replace the functions above with the one below
-// dont actually replace them, just use those as private inside of this one
+// don't actually replace them, just use those as private inside of this one
 export function prepareTestData(nodeParams: MockNodeInput): INodeExecutionData[] {
 	const returnData: INodeExecutionData[] = [];
 

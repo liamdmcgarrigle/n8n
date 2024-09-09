@@ -1,14 +1,9 @@
-import {
-	type ITriggerFunctions,
-	type INodeType,
-	type INodeTypeDescription,
-	type ITriggerResponse,
-	NodeConnectionType,
-	NodeOperationError,
+import { NodeOperationError } from 'n8n-workflow';
+import type {
 	INodeExecutionData,
 	IExecuteFunctions,
-	INodeParameters,
-	IDataObject,
+	INodeType,
+	INodeTypeDescription,
 } from 'n8n-workflow';
 import {
 	testIDField,
@@ -23,7 +18,6 @@ import {
 	cleanUpBranchDefault,
 	failBranchDefault,
 	throwOnFailConst,
-	getNodeInputsData,
 	triggerWithMatchingIdRan,
 } from './GenericFunctions';
 
@@ -40,10 +34,12 @@ export class UnitTest implements INodeType {
 		defaults: {
 			name: 'Unit Test Evaluation',
 		},
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		inputs: `={{(${nodeInputs})($parameter)}}`,
 		// requiredInputs: `={{(${nodeInputs})($parameter).length === 2 ? [0,1] : 1}}`,
 		// TODO: Figure this out. super annoyed by it
 		requiredInputs: [0, 1, 2],
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		outputs: `={{(${nodeOutputs})($parameter,${cleanUpBranchDefault}, ${failBranchDefault})}}`,
 		// outputs: [NodeConnectionType.Main],
 		properties: [
@@ -87,17 +83,14 @@ export class UnitTest implements INodeType {
 				item = items[itemIndex];
 
 				// set throwOnFail param. is a nasty ternary to get const
-				const throwOnFail = (this.getNodeParameter('additionalFields', itemIndex) as IDataObject)
-					.errorOnFail
-					? (this.getNodeParameter('additionalFields', itemIndex) as IDataObject).errorOnFail
+				const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+					? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
 					: throwOnFailConst;
 
 				// set isCleanUpBranchEnabled param. is a nasty ternary to get const
-				const isCleanUpBranchEnabled = (
-					this.getNodeParameter('additionalFields', itemIndex) as IDataObject
-				).isCleanUpBranchEnabled
-					? ((this.getNodeParameter('additionalFields', itemIndex) as IDataObject)
-							.isCleanUpBranchEnabled as boolean)
+				const isCleanUpBranchEnabled = this.getNodeParameter('additionalFields', itemIndex)
+					.isCleanUpBranchEnabled
+					? (this.getNodeParameter('additionalFields', itemIndex).isCleanUpBranchEnabled as boolean)
 					: cleanUpBranchDefault;
 
 				// mutable var for test pass/fail
@@ -161,12 +154,16 @@ export class UnitTest implements INodeType {
 				// item.json['$workflow'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$workflow);
 			} catch (error) {
 				if (this.continueOnFail()) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					items.push({ json: this.getInputData(itemIndex)[0].json, error, pairedItem: itemIndex });
 				} else {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 					if (error.context) {
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 						error.context.itemIndex = itemIndex;
 						throw error;
 					}
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 					throw new NodeOperationError(this.getNode(), error, {
 						itemIndex,
 					});
@@ -187,9 +184,9 @@ export class UnitTest implements INodeType {
 
 		// sets bool vars based on current output branches
 		const cleanUpExists =
-			outputBranches.find((item) => item.displayName === 'Clean Up') !== undefined;
+			outputBranches.find((branch) => branch.displayName === 'Clean Up') !== undefined;
 		const onFailExists =
-			outputBranches.find((item) => item.displayName === 'On Fail') !== undefined;
+			outputBranches.find((branch) => branch.displayName === 'On Fail') !== undefined;
 
 		// outputs data based on which branches are active
 		if (!cleanUpExists && onFailExists) {

@@ -1,4 +1,4 @@
-import { INodeProperties } from 'n8n-workflow';
+import type { INodeProperties } from 'n8n-workflow';
 import { cleanUpBranchDefault, failBranchDefault, throwOnFailConst } from './GenericFunctions';
 
 // --------------------------------------------
@@ -125,6 +125,7 @@ export const mockNodeInputs: INodeProperties[] = [
 		name: 'mockNodes',
 		placeholder: 'Add Mock Node',
 		type: 'fixedCollection',
+		// eslint-disable-next-line n8n-nodes-base/node-param-description-miscased-json
 		description:
 			"You can name a node that the test will simulate. That way you can still use the format like `{{ $('Node Name').item.json['name'] }}` instead of just `{{ $json['name'] }}`.",
 		default: {},
@@ -275,6 +276,7 @@ export const additionalFields: INodeProperties[] = [
 				displayName: 'Error on Fail?',
 				name: 'errorOnFail',
 				type: 'boolean',
+				// eslint-disable-next-line n8n-nodes-base/node-param-default-wrong-for-boolean
 				default: throwOnFailConst, // only edit this value in the `/GenericFunctions.ts` file
 				description: 'Whether to throw an error when a test fails',
 			},
@@ -282,6 +284,7 @@ export const additionalFields: INodeProperties[] = [
 				displayName: 'Fail Branch?',
 				name: 'isFailBranchEnabled',
 				type: 'boolean',
+				// eslint-disable-next-line n8n-nodes-base/node-param-default-wrong-for-boolean
 				default: failBranchDefault, // only edit this value in the `/GenericFunctions.ts` file
 				description:
 					'Whether to show an on fail branch that can be used for things like notifications',
@@ -290,6 +293,7 @@ export const additionalFields: INodeProperties[] = [
 				displayName: 'Cleanup Branch?',
 				name: 'isCleanUpBranchEnabled',
 				type: 'boolean',
+				// eslint-disable-next-line n8n-nodes-base/node-param-default-wrong-for-boolean
 				default: cleanUpBranchDefault, // only edit this value in the `/GenericFunctions.ts` file
 				description:
 					'Whether to show a branch that runs after the test and can be used for cleanup/teardown. Example usage would be to delete additions to external services, like deleting a test contact creation.',
