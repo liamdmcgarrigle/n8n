@@ -14,8 +14,9 @@ import type {
 	StartNodeData,
 	IRun,
 	INode,
+	IConnections,
 } from 'n8n-workflow';
-import { NodeConnectionType } from 'n8n-workflow';
+import { NodeConnectionType, sleep } from 'n8n-workflow';
 
 import { useToast } from '@/composables/useToast';
 import { useNodeHelpers } from '@/composables/useNodeHelpers';
@@ -78,6 +79,62 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 		}
 
 		return response;
+	}
+
+	interface TestNodePair {
+		triggerNodeName: string;
+		evaluationNodeName: string;
+		connections: IConnections;
+	}
+
+	async function runUnitTests() {
+		const workflow = workflowHelpers.getCurrentWorkflow();
+		const nodes: INode[] = Object.values(workflow.nodes);
+
+		const testnodePairs: TestNodePair[] = [];
+
+		const testTriggerNodes: INode[] = nodes.filter(
+			(node) =>
+				node.type === 'n8n-nodes-base.unitTestTrigger' &&
+				(node.parameters.testId as string)?.length > 0 &&
+				node.disabled === false,
+		);
+
+		// ensure each trigger node has an evaluation node
+		for (const testTriggerNode of testTriggerNodes) {
+			const testTriggerId: string = testTriggerNode.parameters.testId as string; // TODO: Wrap in try catch
+
+			// TODO: Does this error when empty?
+			const evaluationNode = nodes.find(
+				(node) =>
+					node.type === 'n8n-nodes-base.unitTest' &&
+					node.parameters.testId === testTriggerId &&
+					node.disabled === false,
+			);
+
+			// don't add to output if there is no evaluation node
+			if (evaluationNode === undefined) continue;
+
+			testnodePairs.push({
+				triggerNodeName: testTriggerNode.name,
+				evaluationNodeName: evaluationNode.name,
+				connections: workflow.connectionsByDestinationNode,
+			});
+			console.log(
+				`connections for ${testTriggerNode.name} is apparently ${JSON.stringify(workflow.connectionsByDestinationNode)}`,
+			);
+		}
+
+		for (const testNodePair of testnodePairs) {
+			// await runWorkflowApi(runData);
+			runWorkflow( {
+				destinationNode: testNodePair.evaluationNodeName,
+				triggerNode: testNodePair.triggerNodeName,
+				unitTest: true,
+			})
+
+		}
+
 	}
 
 	async function runWorkflow(options: {
@@ -339,7 +396,7 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 
 				const isUnitTestTrigger: boolean =
 					workflow.nodes[directParentNode].type === 'n8n-nodes-base.unitTestTrigger';
-				const isWorkflowDisabled: boolean = workflow.nodes[directParentNode].disabled;
+				const isWorkflowDisabled: boolean = workflow.nodes[directParentNode].disabled as boolean;
 
 				// don't add disabled nodes or unit test nodes
 				if (isWorkflowDisabled ?? isUnitTestTrigger) {
@@ -449,6 +506,7 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 
 	return {
 		consolidateRunDataAndStartNodes,
+		runUnitTests,
 		runWorkflow,
 		runWorkflowApi,
 		stopCurrentExecution,
