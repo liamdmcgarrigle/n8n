@@ -4686,9 +4686,9 @@ export default defineComponent({
 				<!-- Added by Liam for unit test functionality -->
 				<n8n-button
 					v-if="containsUnitTestNodes"
-					label="Run Unit Tests"
-					size="large"
-					icon="flask"
+					label="Run unit tests"
+					size="card"
+					icon="tasks"
 					type="primary"
 					data-test-id="workflow-chat-button"
 					@click.stop="onRunUnitTests"
