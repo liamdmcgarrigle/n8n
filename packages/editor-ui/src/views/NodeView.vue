@@ -860,8 +860,9 @@ export default defineComponent({
 			this.$telemetry.track('User clicked execute node button', telemetryPayload);
 			void this.externalHooks.run('nodeView.onRunNode', telemetryPayload);
 
-			if (node.type === 'n8n-nodes-base.unitTest') {
+			if (node?.type === 'n8n-nodes-base.unitTest') {
 				// const workflow = workflowHelpers.getCurrentWorkflow();
+				const workflow = this.workflowHelpers.getCurrentWorkflow();
 				// this.workflowsStore.allNodes
 				// console.log(`Test workflow: ${JSON.stringify(workflow)}`);
 
@@ -869,17 +870,20 @@ export default defineComponent({
 				const testId = node?.parameters.testId;
 				console.log(`test ID: ${testId}`);
 
-				// const allTriggers = workflow.getTriggerNodes();
+				const allTriggers = workflow.getTriggerNodes();
 				// console.log(`All Triggers: ${JSON.stringify(allTriggers)}`);
 
-				// const testTriggerNode = allTriggers.filter(allTriggers => allTriggers.parameters.testId === testId);
-				// console.log(`Test Trigger Node: ${JSON.stringify(testTriggerNode)}`);
+				const testTriggerNode = allTriggers.filter(
+					(allTriggers) => allTriggers.parameters.testId === testId,
+				);
+				console.log(`Test Trigger Node: ${testTriggerNode[0].name}`);
 
-				// if(!testTriggerNode){
-				// 	throw `There was no start trigger node found with the same ID of ${testId}`
-				// }
+				if (!testTriggerNode) {
+					throw `There was no start trigger node found with the same ID of ${testId}`;
+					this.workflowHelpers;
+				}
 
-				console.log(`the if about the unit test thing ran!`);
+				console.log('the if about the unit test thing ran!');
 			}
 			void this.runWorkflow({ destinationNode: nodeName, source });
 		},
