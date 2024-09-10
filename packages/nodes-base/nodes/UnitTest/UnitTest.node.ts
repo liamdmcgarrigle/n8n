@@ -75,7 +75,7 @@ export class UnitTest implements INodeType {
 		const failedArray: INodeExecutionData[] = [];
 		const cleanUpArray: INodeExecutionData[] = [];
 
-		// console.log(`THIS IS THE DROIDS: ${JSON.stringify(this.getInputData())}`);
+		// console.log(`THIS IS THE DROIDS: ${JSON.stringify(this.getNode().parameters.testId)}`);
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {

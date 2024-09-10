@@ -442,6 +442,18 @@ export default defineComponent({
 		containsTrigger(): boolean {
 			return this.triggerNodes.length > 0;
 		},
+
+		// Returns true if there is a chat trigger node in the workflow
+		// added by Liam for the unit test functionality
+		containsUnitTestNodes(): boolean {
+			return (
+				!this.executionWaitingForWebhook &&
+				!!this.nodes.find(
+					(node) =>
+						['n8n-nodes-base.unitTestTrigger'].includes(node.type) && node.disabled !== true,
+				)
+			);
+		},
 		containsChatNodes(): boolean {
 			return (
 				!this.executionWaitingForWebhook &&
@@ -847,6 +859,28 @@ export default defineComponent({
 			};
 			this.$telemetry.track('User clicked execute node button', telemetryPayload);
 			void this.externalHooks.run('nodeView.onRunNode', telemetryPayload);
+
+			if (node.type === 'n8n-nodes-base.unitTest') {
+				// const workflow = workflowHelpers.getCurrentWorkflow();
+				// this.workflowsStore.allNodes
+				// console.log(`Test workflow: ${JSON.stringify(workflow)}`);
+
+				// console.log(`THE THINGY IS: ${JSON.stringify(workflow.getTriggerNodes())}`);
+				const testId = node?.parameters.testId;
+				console.log(`test ID: ${testId}`);
+
+				// const allTriggers = workflow.getTriggerNodes();
+				// console.log(`All Triggers: ${JSON.stringify(allTriggers)}`);
+
+				// const testTriggerNode = allTriggers.filter(allTriggers => allTriggers.parameters.testId === testId);
+				// console.log(`Test Trigger Node: ${JSON.stringify(testTriggerNode)}`);
+
+				// if(!testTriggerNode){
+				// 	throw `There was no start trigger node found with the same ID of ${testId}`
+				// }
+
+				console.log(`the if about the unit test thing ran!`);
+			}
 			void this.runWorkflow({ destinationNode: nodeName, source });
 		},
 		async onOpenChat() {
@@ -874,6 +908,16 @@ export default defineComponent({
 			});
 
 			await this.runWorkflow({});
+			this.refreshEndpointsErrorsState();
+		},
+
+		// Added by liam for the unit test functionality
+		async onRunUnitTests() {
+			// Copied and pasted from the run manual execution function. I deleted all the telemetry data
+			await this.runWorkflow({
+				destinationNode: 'Format First Name Test Evaluation',
+				unitTest: true,
+			});
 			this.refreshEndpointsErrorsState();
 		},
 		resetEndpointsErrors() {
@@ -4628,6 +4672,17 @@ export default defineComponent({
 						/>
 					</KeyboardShortcutTooltip>
 				</span>
+
+				<!-- Added by Liam for unit test functionality -->
+				<n8n-button
+					v-if="containsUnitTestNodes"
+					label="Run Unit Tests"
+					size="large"
+					icon="flask"
+					type="primary"
+					data-test-id="workflow-chat-button"
+					@click.stop="onRunUnitTests"
+				/>
 
 				<n8n-button
 					v-if="containsChatNodes"
