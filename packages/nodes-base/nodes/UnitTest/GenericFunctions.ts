@@ -122,6 +122,10 @@ export interface TestTriggerParameters {
 	};
 }
 
+export interface UnitTestMetaData {
+	pass?: boolean;
+  }
+
 export function getReturnNodeJsonFromKeyValue(
 	rawKeyValueData: RawKeyValueInputItems[],
 ): TriggerReturnData[] {
@@ -184,16 +188,4 @@ export function getNodeInputsData(this: IExecuteFunctions) {
 	}
 
 	return returnData;
-}
-
-export function triggerWithMatchingIdRan(node: IExecuteFunctions, testId: string) {
-	// return node.getExecuteData(); // returns execution data of current node including params, node type, data, and more
-	// return await node.getInputConnectionData(NodeConnectionType.Main, 0); // returns data from previous node, but i kept getting the error 'Node does not have a `supplyData` method defined'
-	// return node.getInputSourceData(0); // returns the name of the node that connects
-	// return node.getKnownNodeTypes(); // returns a list of all of the node types
-	// return node.getParentNodes('Unit Test Trigger'); // kept outputting empty array
-	// return node.getWorkflow(); // returns simple metadata of the workflow
-	// return node.getWorkflowDataProxy(0);
-	// return node.getMode(); // gets the execution mode, which in this case without modification is 'manual'
-	return node.getChildNodes('Unit Test Evaluation'); // gets the execution mode, which in this case without modification is 'manual'
 }

@@ -18,7 +18,7 @@ import {
 	cleanUpBranchDefault,
 	failBranchDefault,
 	throwOnFailConst,
-	triggerWithMatchingIdRan,
+	UnitTestMetaData,
 } from './GenericFunctions';
 
 export class UnitTest implements INodeType {
@@ -37,9 +37,7 @@ export class UnitTest implements INodeType {
 		},
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		inputs: `={{(${nodeInputs})($parameter)}}`,
-		// requiredInputs: `={{(${nodeInputs})($parameter).length === 2 ? [0,1] : 1}}`,
-		// TODO: Figure this out. super annoyed by it
-		requiredInputs: [0, 1, 2],
+		requiredInputs: [0, 1],
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		outputs: `={{(${nodeOutputs})($parameter,${cleanUpBranchDefault}, ${failBranchDefault})}}`,
 		// outputs: [NodeConnectionType.Main],
@@ -55,39 +53,32 @@ export class UnitTest implements INodeType {
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		const items = this.getInputData();
-		let item: INodeExecutionData;
-		// console.log(JSON.stringify(this.getNodeInputs()));
+		const evaluationType = this.getNodeParameter('operation', 0) as string;
 
-		const testId = this.getNodeParameter('testId', 0) as string;
-		
-		
+		// mutable var for test pass/fail
+		let pass = false;
+
+		// output lists
 		const failedArray: INodeExecutionData[] = [];
 		const cleanUpArray: INodeExecutionData[] = [];
 
-		// console.log(`THIS IS THE DROIDS: ${JSON.stringify(this.getNode().parameters.testId)}`);
 
-		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-			try {
-				// set val of item for better readability
-				item = items[itemIndex];
+		if (evaluationType === 'comparisonEvaluation') {
+			const items = this.getInputData();
+			let item: INodeExecutionData;	
+			
+			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+				try {
+					// set val of item for better readability
+					item = items[itemIndex];
 
-				// set throwOnFail param. is a nasty ternary to get const
-				const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
-					? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
-					: throwOnFailConst;
+					// set throwOnFail param. is a nasty ternary to get const
+					const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+						? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+						: throwOnFailConst;
 
-				// set isCleanUpBranchEnabled param. is a nasty ternary to get const
-				const isCleanUpBranchEnabled = this.getNodeParameter('additionalFields', itemIndex)
-					.isCleanUpBranchEnabled
-					? (this.getNodeParameter('additionalFields', itemIndex).isCleanUpBranchEnabled as boolean)
-					: cleanUpBranchDefault;
-
-				// mutable var for test pass/fail
-				let pass = false;
-
-				// evaluations for comparisonEvaluation operation
-				if (this.getNodeParameter('operation', itemIndex) === 'comparisonEvaluation') {
+					
+					
 					pass = this.getNodeParameter('evaluations', itemIndex, false, {
 						extractValue: true,
 					}) as boolean;
@@ -97,56 +88,24 @@ export class UnitTest implements INodeType {
 							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
 						});
 
+						cleanUpArray.push({
+							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+						});
+
 						// throw error if set to fail
 						if (throwOnFail) {
 							throw new NodeOperationError(this.getNode(), 'Test Failed', {
 								itemIndex,
 							});
 						}
+					} else {
+						cleanUpArray.push({
+							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+						});
 					}
-				} // end of evaluations for comparisonEvaluation operation
 
-				// evaluations for booleanInputComparison operation
-				if (this.getNodeParameter('operation', itemIndex) === 'booleanInputComparison') {
-					// this.getInputSourceData(0, inputName) // I think this is how we get the branches?
-					// prob need to do that at the top of the func though
-					//
-					// this.getInputConnectionData()
-					// console.log(this.getInputData());
-					// console.log(`THIS IS THE DROIDS: ${JSON.stringify(this.getInputData())}`);
-				}
-
-				// adds each test run data to clean up branch output array, even failed runs
-				if (isCleanUpBranchEnabled) {
-					cleanUpArray.push({
-						json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
-					});
-				} // end of evaluations for booleanInputComparison operation
-
-				// console.log(`this.getInputData()() = ${JSON.stringify(this.getInputData())}`);
-				// console.log(`this.this.getNodeInputs()() = ${JSON.stringify(this.getNodeInputs())}`);
-
-				// This line below is able to place values as if it was other nodes
-				// problem is it only works on execution nodes and not trigger nodes
-				// but that doesnt seem like it will work because it stops you if you try to run before that node with the error
-				// "Referenced node is unexecuted An expression references the node 'Edit Fields', but it hasn't been executed
-				// yet. Either change the expression, or re-wire your workflow to make sure that node executes first."
-				// this.getWorkflowDataProxy(itemIndex).$node['Edit Fields'].json['fake'] = 'placed fake value!';
-				// seems like i will need to figure out how to hack it after all
-
-				// item.json['$data'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$data);
-				// item.json['$env'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$env);
-				// item.json['$input'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$input);
-				// item.json["$node['Edit Fields']"] = JSON.stringify(
-				// 	this.getWorkflowDataProxy(itemIndex).$node['Edit Fields'],
-				// );
-
-				// item.json['$workflow'] = JSON.stringify(this.getWorkflowDataProxy(itemIndex).$workflow);
-			} catch (error) {
-				if (this.continueOnFail()) {
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-					items.push({ json: this.getInputData(itemIndex)[0].json, error, pairedItem: itemIndex });
-				} else {
+					
+				} catch (error) {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 					if (error.context) {
 						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -160,6 +119,93 @@ export class UnitTest implements INodeType {
 				}
 			}
 		}
+
+
+			// evaluations for booleanInputComparison operation
+			if (evaluationType === 'booleanInputComparison') {
+
+				// get input data
+				const passedRuns = this.getInputData(0);
+				const failedRuns = this.getInputData(1);
+
+				const items: INodeExecutionData[] = [];
+				let item: INodeExecutionData;
+
+
+				passedRuns.map((run) => {
+					items.push({ 
+						json: {
+							...run.json,
+							_unitTest: {
+								...((run.json._unitTest || {}) as object),
+								pass: true 
+							}
+						}
+					})
+				})
+
+				failedRuns.map((run) => {
+					items.push({ 
+						json: {
+							...run.json,
+							_unitTest: {
+								...((run.json._unitTest || {}) as object),
+								pass: false 
+							}
+						}
+					})
+				});
+
+
+
+				for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+					try {
+						item = items[itemIndex];
+
+						// set throwOnFail param. is a nasty ternary to get const
+						const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+							? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+							: throwOnFailConst;
+						
+						pass = (item.json._unitTest as UnitTestMetaData).pass as boolean;
+
+						if (!pass) {
+							failedArray.push({
+								json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+							});
+
+							cleanUpArray.push({
+								json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+							});
+
+							// throw error if set to fail
+							if (throwOnFail) {
+								throw new NodeOperationError(this.getNode(), 'Test Failed', {
+									itemIndex,
+								});
+							}
+						} else {
+							cleanUpArray.push({
+								json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+							});
+						}
+
+					} catch (error) {
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+						if (error.context) {
+							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+							error.context.itemIndex = itemIndex;
+							throw error;
+						}
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+						throw new NodeOperationError(this.getNode(), error, {
+							itemIndex,
+						});
+					}
+				}
+
+			}
+		
 
 		//
 		// CHECKS WHICH BRANCHES SHOULD OUTPUT
