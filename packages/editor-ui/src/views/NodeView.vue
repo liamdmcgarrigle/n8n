@@ -860,32 +860,39 @@ export default defineComponent({
 			this.$telemetry.track('User clicked execute node button', telemetryPayload);
 			void this.externalHooks.run('nodeView.onRunNode', telemetryPayload);
 
+			// Added by Liam for the unit test functionality
 			if (node?.type === 'n8n-nodes-base.unitTest') {
-				// const workflow = workflowHelpers.getCurrentWorkflow();
 				const workflow = this.workflowHelpers.getCurrentWorkflow();
-				// this.workflowsStore.allNodes
-				// console.log(`Test workflow: ${JSON.stringify(workflow)}`);
-
-				// console.log(`THE THINGY IS: ${JSON.stringify(workflow.getTriggerNodes())}`);
 				const testId = node?.parameters.testId;
-				console.log(`test ID: ${testId}`);
-
 				const allTriggers = workflow.getTriggerNodes();
-				// console.log(`All Triggers: ${JSON.stringify(allTriggers)}`);
-
 				const testTriggerNode = allTriggers.filter(
-					(allTriggers) => allTriggers.parameters.testId === testId,
-				);
-				console.log(`Test Trigger Node: ${testTriggerNode[0].name}`);
+					(allTriggers) =>
+						allTriggers.parameters.testId === testId &&
+						allTriggers.type === 'n8n-nodes-base.unitTestTrigger',
+				)[0];
 
+				// if no matching test trigger node is found then display error
 				if (!testTriggerNode) {
-					throw `There was no start trigger node found with the same ID of ${testId}`;
-					this.workflowHelpers;
+					this.showError(
+						new Error(`There was no start trigger node found with the same ID of ${testId}`),
+						'There was no unit test trigger node found with the same ID',
+					);
+					throw new Error(`There was no start trigger node found with the same ID`);
 				}
 
-				console.log('the if about the unit test thing ran!');
+				const testTriggerName = testTriggerNode.name;
+
+				// run test
+				void this.runWorkflow({
+					destinationNode: nodeName,
+					triggerNode: testTriggerName,
+					unitTest: true,
+					source,
+				});
+			} else {
+				// this is the original code to run
+				void this.runWorkflow({ destinationNode: nodeName, source });
 			}
-			void this.runWorkflow({ destinationNode: nodeName, source });
 		},
 		async onOpenChat() {
 			const telemetryPayload = {
