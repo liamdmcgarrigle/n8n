@@ -90,7 +90,7 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 		triggerNode?: string;
 		nodeData?: ITaskData;
 		source?: string;
-		unitTest?: boolean; // added by Liam for unit test functionality
+		unitTest?: boolean;
 	}): Promise<IExecutionPushResponse | undefined> {
 		const workflow = workflowHelpers.getCurrentWorkflow();
 
@@ -336,13 +336,20 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 		pinData: IPinData | undefined,
 		workflow: Workflow,
 		unitTest: boolean = false,
-		triggerNode?: string | undefined,
+		triggerNode?: string,
 	): { runData: IRunData | undefined; startNodeNames: string[] } {
-		const startNodeNames = new Set<string>();
+		const startNodeNames: string[] = [];
 		let newRunData: IRunData | undefined;
 
-		if (runData !== null && Object.keys(runData).length !== 0) {
+		if (unitTest && triggerNode) {
+			// this ensures manually run unit tests always start with their corresponding trigger nodes
+			return { runData: {}, startNodeNames: [triggerNode] };
+		} else if (runData !== null && Object.keys(runData).length !== 0) {
 			newRunData = {};
+
+			// TODO: Add logic to make it so workflows started on the node do not start from
+			// a unit test trigger node unless its clicked from a unit test node
+
 			// Go over the direct parents of the node
 			for (const directParentNode of directParentNodes) {
 				// Go over the parents of that node so that we can get a start
@@ -350,31 +357,38 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 				const parentNodes = workflow.getParentNodes(directParentNode, NodeConnectionType.Main);
 
 				// Add also the enabled direct parent to be checked
-				if (workflow.nodes[directParentNode].disabled) continue;
-
+				if (
+					workflow.nodes[directParentNode].disabled ||
+					workflow.nodes[directParentNode].type === 'n8n-nodes-base.unitTestTrigger'
+				) {
+					continue;
+				}
 				parentNodes.push(directParentNode);
 
 				for (const parentNode of parentNodes) {
-					// Everything in the `else` was existing. The if and the code in
-					// the true section was added by Liam for the unit test functionality
-					if (unitTest && triggerNode) {
-						// getNode('triggerNode');
-					} else {
-						// We want to execute nodes that don't have run data neither pin data
-						// in addition, if a node failed we want to execute it again
-						if (
-							(!runData[parentNode]?.length && !pinData?.[parentNode]?.length) ||
-							runData[parentNode]?.[0]?.error !== undefined
-						) {
-							// When we hit a node which has no data we stop and set it
-							// as a start node the execution from and then go on with other
-							// direct input nodes
-							startNodeNames.add(parentNode);
+					// We want to execute nodes that don't have run data neither pin data
+					// in addition, if a node failed we want to execute it again
+					if (
+						(!runData[parentNode]?.length && !pinData?.[parentNode]?.length) ||
+						runData[parentNode]?.[0]?.error !== undefined
+					) {
+						// When we hit a node which has no data we stop and set it
+						// as a start node the execution from and then go on with other
+						// direct input nodes
+
+						const isUnitTestTrigger =
+							workflow.getNode(parentNode)?.type === 'n8n-nodes-base.unitTestTrigger';
+
+						if (isUnitTestTrigger) {
 							break;
 						}
-						if (runData[parentNode] && !runData[parentNode]?.[0]?.error) {
-							newRunData[parentNode] = runData[parentNode]?.slice(0, 1);
-						}
+
+						startNodeNames.push(parentNode);
+						break;
+					}
+
+					if (runData[parentNode] && !runData[parentNode]?.[0]?.error) {
+						newRunData[parentNode] = runData[parentNode]?.slice(0, 1);
 					}
 				}
 			}
@@ -388,8 +402,6 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 
 		return { runData: newRunData, startNodeNames: [...startNodeNames] };
 	}
-
-	function findTriggerNodeId(parentNode: string) {}
 
 	async function stopCurrentExecution() {
 		const executionId = workflowsStore.activeExecutionId;
