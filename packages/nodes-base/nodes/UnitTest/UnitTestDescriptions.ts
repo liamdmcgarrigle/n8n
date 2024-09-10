@@ -216,6 +216,7 @@ export const comparisonEvaluationFields: INodeProperties[] = [
 				caseSensitive: '={{!$parameter.evaluationOptions.ignoreCase}}',
 				typeValidation:
 					'={{$parameter.evaluationOptions.looseTypeValidation ? "loose" : "strict"}}',
+				version: 2,
 			},
 		},
 	},

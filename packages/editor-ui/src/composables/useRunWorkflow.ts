@@ -337,18 +337,22 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 				// node for each of the branches
 				const parentNodes = workflow.getParentNodes(directParentNode, NodeConnectionType.Main);
 
-				// Add also the enabled direct parent to be checked
-				if (
-					workflow.nodes[directParentNode].disabled ||
-					workflow.nodes[directParentNode].type === 'n8n-nodes-base.unitTestTrigger'
-				) {
+				const isUnitTestTrigger: boolean =
+					workflow.nodes[directParentNode].type === 'n8n-nodes-base.unitTestTrigger';
+				const isWorkflowDisabled: boolean = workflow.nodes[directParentNode].disabled;
+
+				// don't add disabled nodes or unit test nodes
+				if (isWorkflowDisabled ?? isUnitTestTrigger) {
 					continue;
 				}
+
+				// Add also the enabled direct parent to be checked
 				parentNodes.push(directParentNode);
 
 				for (const parentNode of parentNodes) {
 					// We want to execute nodes that don't have run data neither pin data
 					// in addition, if a node failed we want to execute it again
+
 					if (
 						(!runData[parentNode]?.length && !pinData?.[parentNode]?.length) ||
 						runData[parentNode]?.[0]?.error !== undefined
@@ -356,13 +360,6 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 						// When we hit a node which has no data we stop and set it
 						// as a start node the execution from and then go on with other
 						// direct input nodes
-
-						const isUnitTestTrigger =
-							workflow.getNode(parentNode)?.type === 'n8n-nodes-base.unitTestTrigger';
-
-						if (isUnitTestTrigger) {
-							break;
-						}
 
 						startNodeNames.push(parentNode);
 						break;
