@@ -20,7 +20,7 @@ export class UnitTestTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Unit Test Trigger',
 		name: 'unitTestTrigger',
-		icon: 'file:unit_test.svg',
+		icon: 'fa:tasks',
 		group: ['trigger'],
 		version: 1,
 		description: 'Runs a specific unit test to test logic or your API endpoints',
@@ -28,8 +28,8 @@ export class UnitTestTrigger implements INodeType {
 		subtitle: '= ID: {{ $parameter["testId"] }}',
 		defaults: {
 			name: 'Unit Test Trigger',
+			color: '#b0b0b0',
 		},
-
 		inputs: [],
 		outputs: [NodeConnectionType.Main],
 		properties: [

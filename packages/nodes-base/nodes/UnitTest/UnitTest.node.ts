@@ -25,7 +25,7 @@ export class UnitTest implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Unit Test',
 		name: 'unitTest',
-		icon: 'file:unit_test.svg',
+		icon: 'fa:tasks',
 		group: ['input'],
 		version: 1,
 		description: 'Runs a specific unit test to test logic or your API endpoints',
@@ -33,6 +33,7 @@ export class UnitTest implements INodeType {
 		subtitle: '= ID: {{ $parameter["testId"] }}',
 		defaults: {
 			name: 'Unit Test Evaluation',
+			color: '#b0b0b0',
 		},
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		inputs: `={{(${nodeInputs})($parameter)}}`,
@@ -58,20 +59,9 @@ export class UnitTest implements INodeType {
 		let item: INodeExecutionData;
 		// console.log(JSON.stringify(this.getNodeInputs()));
 
-		// TODO: Put function here to check for all of the node type unittesttrigger (not the actual name)
-		// and then loop over them to see all the ids, then find the correct ID, which then i can extract the name from,
-		// then i can check to see if the test trigger ran. only allow node to continue if test trigger with matching id ran
 		const testId = this.getNodeParameter('testId', 0) as string;
-		// if (!triggerWithMatchingIdRan(testId)){
-
-		// }
-
-		console.log(triggerWithMatchingIdRan(this, testId));
-
-		// TODO: Figure out how to filter out non test runs from running tests
-		// option 1:
-		// use `this.getMode()` to get execution mode. We would need to add a unit test mode to that though
-		// option 2: look for the starting test ID trigger
+		
+		
 		const failedArray: INodeExecutionData[] = [];
 		const cleanUpArray: INodeExecutionData[] = [];
 
