@@ -16,7 +16,7 @@ import type {
 	INode,
 	IConnections,
 } from 'n8n-workflow';
-import { NodeConnectionType, sleep } from 'n8n-workflow';
+import { NodeConnectionType } from 'n8n-workflow';
 
 import { useToast } from '@/composables/useToast';
 import { useNodeHelpers } from '@/composables/useNodeHelpers';
@@ -120,21 +120,17 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 				evaluationNodeName: evaluationNode.name,
 				connections: workflow.connectionsByDestinationNode,
 			});
-			console.log(
-				`connections for ${testTriggerNode.name} is apparently ${JSON.stringify(workflow.connectionsByDestinationNode)}`,
-			);
 		}
 
 		for (const testNodePair of testnodePairs) {
 			// await runWorkflowApi(runData);
-			runWorkflow( {
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			runWorkflow({
 				destinationNode: testNodePair.evaluationNodeName,
 				triggerNode: testNodePair.triggerNodeName,
 				unitTest: true,
-			})
-
+			});
 		}
-
 	}
 
 	async function runWorkflow(options: {
