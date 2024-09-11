@@ -47,7 +47,16 @@ export const keyValueRunInputs: INodeProperties[] = [
 				default: {},
 				values: [
 					{
-						displayName: 'Test Run',
+						displayName: 'Test Run Name',
+						name: 'testRunName',
+						type: 'string',
+						default: '',
+						description:
+							'Give the test run a same so you can identify what failed easier. Not required.',
+						placeholder: 'Leading space edge case',
+					},
+					{
+						displayName: 'Test Run data',
 						name: 'testRun',
 						type: 'fixedCollection',
 						default: {},
@@ -102,7 +111,16 @@ export const jsonRunInputs: INodeProperties[] = [
 				displayName: 'JSON Data',
 				values: [
 					{
-						displayName: 'Test Run',
+						displayName: 'Test Run Name',
+						name: 'testRunName',
+						type: 'string',
+						default: '',
+						description:
+							'Give the test run a same so you can identify what failed easier. Not required.',
+						placeholder: 'Leading space edge case',
+					},
+					{
+						displayName: 'Test Run JSON Data',
 						name: 'jsonTestRun',
 						type: 'json',
 						default: '{\n  "keyOne": "ValueOne",\n  "keyTwo": "ValueTwo"\n}',
@@ -186,13 +204,18 @@ export const evaluationModeSelection: INodeProperties[] = [
 				action: 'Comparison evaluation',
 				description: 'Evaluate the input data similar to an if node, with true being a passed test',
 			},
-			{
-				name: 'Boolean Input Evaluation',
-				value: 'booleanInputComparison',
-				action: 'Boolean input evaluation',
-				description:
-					'Evaluate a test based on the input branch, best for testing if nodes or paths taken',
-			},
+			//
+			// I currently can not get the boolean mode to work right.
+			// it only works if data is also passed into the pass branch
+			// hopefully it's possible, i'll ask around and see if anyone has any insight
+			//
+			// {
+			// 	name: 'Boolean Input Evaluation',
+			// 	value: 'booleanInputComparison',
+			// 	action: 'Boolean input evaluation',
+			// 	description:
+			// 		'Evaluate a test based on the input branch, best for testing if nodes or paths taken',
+			// },
 		],
 		default: 'comparisonEvaluation',
 	},
@@ -216,7 +239,7 @@ export const comparisonEvaluationFields: INodeProperties[] = [
 				caseSensitive: '={{!$parameter.evaluationOptions.ignoreCase}}',
 				typeValidation:
 					'={{$parameter.evaluationOptions.looseTypeValidation ? "loose" : "strict"}}',
-				version: 2
+				version: 2,
 			},
 		},
 	},
@@ -253,7 +276,7 @@ export const comparisonEvaluationFields: INodeProperties[] = [
 export const booleanEvaluationFields: INodeProperties[] = [
 	{
 		displayName:
-			'This pass or fail each test based on the input into the node from the test.<br><br>This is ideal for testing if statements or which branch was taken in a workflow.',
+			'This pass or fail each test based on the input into the node from the test.<br><br>This is ideal for testing if statements or which branch was taken in a workflow.<br><br>Both inputs must be connected.',
 		name: 'notice',
 		type: 'notice',
 		displayOptions: {
@@ -262,6 +285,30 @@ export const booleanEvaluationFields: INodeProperties[] = [
 			},
 		},
 		default: '',
+	},
+];
+
+const autoRunOptions: INodeProperties[] = [
+	{
+		displayName: 'Run on Activation?',
+		name: 'runOnActivation',
+		type: 'boolean',
+		default: true, // to change this you will also need to change the default hard coded into the activate button
+		description: 'Whether to run this unit test when the workflow is activated',
+	},
+	{
+		displayName: 'Run on Save On Active Workflow?',
+		name: 'runOnSaveOnActive',
+		type: 'boolean',
+		default: true, // to change this you will also need to change the default hard coded into the save button
+		description: 'Whether to run this unit test on save if the workflow is activate',
+	},
+	{
+		displayName: 'Run on Save On Inactive Workflow?',
+		name: 'runOnSaveOnInactive',
+		type: 'boolean',
+		default: false, // to change this you will also need to change the default hard coded into the save button
+		description: 'Whether to run this unit test on save if the workflow is inactive',
 	},
 ];
 
@@ -306,6 +353,7 @@ export const additionalFields: INodeProperties[] = [
 				default: false,
 				description: 'Whether to disable the workflow on fail',
 			},
+			...autoRunOptions,
 		],
 	},
 ];

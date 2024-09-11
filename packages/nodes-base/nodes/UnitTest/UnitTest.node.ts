@@ -38,10 +38,9 @@ export class UnitTest implements INodeType {
 		},
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		inputs: `={{(${nodeInputs})($parameter)}}`,
-		requiredInputs: [0, 1],
+		requiredInputs: [0, 1, 2],
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		outputs: `={{(${nodeOutputs})($parameter,${cleanUpBranchDefault}, ${failBranchDefault})}}`,
-		// outputs: [NodeConnectionType.Main],
 		properties: [
 			...testIDField,
 			...evaluationModeSelection,
@@ -73,7 +72,6 @@ export class UnitTest implements INodeType {
 					// set val of item for better readability
 					item = items[itemIndex];
 					const triggerTestMetaData = getTriggerTestMetaData(this, testId, itemIndex);
-					console.log(`metadata: ${JSON.stringify(triggerTestMetaData)}`);
 
 					// set throwOnFail param. is a nasty ternary to get const
 					const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
@@ -84,13 +82,24 @@ export class UnitTest implements INodeType {
 						extractValue: true,
 					}) as boolean;
 
+					const unitTestMetadata: UnitTestMetaData = {
+						pass: pass,
+						...triggerTestMetaData,
+					};
+
 					if (!pass) {
 						failedArray.push({
-							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+							json: {
+								...item.json,
+								_unitTest: unitTestMetadata,
+							},
 						});
 
 						cleanUpArray.push({
-							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+							json: {
+								...item.json,
+								_unitTest: unitTestMetadata,
+							},
 						});
 
 						// throw error if set to fail
@@ -101,7 +110,10 @@ export class UnitTest implements INodeType {
 						}
 					} else {
 						cleanUpArray.push({
-							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+							json: {
+								...item.json,
+								_unitTest: unitTestMetadata,
+							},
 						});
 					}
 				} catch (error) {
@@ -119,85 +131,89 @@ export class UnitTest implements INodeType {
 			}
 		}
 
+		// I can't get this to work right now
+		// it only runs if data also goes into the pass input branch
+		//
 		// evaluations for booleanInputComparison operation
-		if (evaluationType === 'booleanInputComparison') {
-			// get input data
-			const passedRuns = this.getInputData(0);
-			const failedRuns = this.getInputData(1);
+		// if (evaluationType === 'booleanInputComparison') {
+		// 	console.log(`preran`);
 
-			const items: INodeExecutionData[] = [];
-			let item: INodeExecutionData;
+		// 	// get input data
+		// 	const passedRuns = this.getInputData(0);
+		// 	const failedRuns = this.getInputData(1);
 
-			passedRuns.map((run) => {
-				items.push({
-					json: {
-						...run.json,
-						_unitTest: {
-							...((run.json._unitTest || {}) as object),
-							pass: true,
-						},
-					},
-				});
-			});
+		// 	const items: INodeExecutionData[] = [];
+		// 	let item: INodeExecutionData;
+		// 	passedRuns.map((run) => {
+		// 		items.push({
+		// 			json: {
+		// 				...run.json,
+		// 				_unitTest: {
+		// 					...(run.json._unitTest as UnitTestMetaData),
+		// 					pass: true,
+		// 				},
+		// 			},
+		// 		});
+		// 	});
 
-			failedRuns.map((run) => {
-				items.push({
-					json: {
-						...run.json,
-						_unitTest: {
-							...((run.json._unitTest || {}) as object),
-							pass: false,
-						},
-					},
-				});
-			});
+		// 	failedRuns.map((run) => {
+		// 		items.push({
+		// 			json: {
+		// 				...run.json,
+		// 				_unitTest: {
+		// 					...(run.json._unitTest as UnitTestMetaData),
+		// 					pass: false,
+		// 				},
+		// 			},
+		// 		});
+		// 	});
 
-			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-				try {
-					item = items[itemIndex];
-					const triggerTestMetaData = getTriggerTestMetaData(this, testId, itemIndex);
+		// 	for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+		// 		try {
+		// 			item = items[itemIndex];
+		// 			const triggerTestMetaData = getTriggerTestMetaData(this, testId, itemIndex);
 
-					// set throwOnFail param. is a nasty ternary to get const
-					const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
-						? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
-						: throwOnFailConst;
+		// 			// set throwOnFail param. is a nasty ternary to get const
+		// 			const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+		// 				? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+		// 				: throwOnFailConst;
 
-					pass = (item.json._unitTest as UnitTestMetaData).pass as boolean;
+		// 			pass = (item.json._unitTest as UnitTestMetaData).pass as boolean;
 
-					if (!pass) {
-						failedArray.push({
-							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
-						});
+		// 			if (!pass) {
+		// 				failedArray.push({
+		// 					json: { ...item.json },
+		// 				});
 
-						cleanUpArray.push({
-							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
-						});
+		// 				cleanUpArray.push({
+		// 					json: { ...item.json },
+		// 				});
 
-						// throw error if set to fail
-						if (throwOnFail) {
-							throw new NodeOperationError(this.getNode(), 'Test Failed', {
-								itemIndex,
-							});
-						}
-					} else {
-						cleanUpArray.push({
-							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
-						});
-					}
-				} catch (error) {
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-					if (error.context) {
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-						error.context.itemIndex = itemIndex;
-						throw error;
-					}
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-					throw new NodeOperationError(this.getNode(), error, {
-						itemIndex,
-					});
-				}
-			}
-		}
+		// 				// throw error if set to fail
+		// 				if (throwOnFail) {
+		// 					throw new NodeOperationError(this.getNode(), 'Test Failed', {
+		// 						itemIndex,
+		// 					});
+		// 				}
+		// 			} else {
+		// 				cleanUpArray.push({
+		// 					json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+		// 				});
+		// 			}
+		// 		} catch (error) {
+		// 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		// 			if (error.context) {
+		// 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		// 				error.context.itemIndex = itemIndex;
+		// 				throw error;
+		// 			}
+		// 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		// 			throw new NodeOperationError(this.getNode(), error, {
+		// 				itemIndex,
+		// 			});
+		// 		}
+		// 	}
+		// }
 
 		//
 		// CHECKS WHICH BRANCHES SHOULD OUTPUT

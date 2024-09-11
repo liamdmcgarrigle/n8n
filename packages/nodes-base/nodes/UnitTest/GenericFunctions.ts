@@ -5,6 +5,7 @@ import type {
 	IDataObject,
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeHelpers, NodeOperationError } from 'n8n-workflow';
+import { combineConditionsCollection } from '../MySql/v2/actions/common.descriptions';
 
 export const nodeInputs = (parameters: INodeParameters) => {
 	// get the current parameter `operation` from the node
@@ -80,12 +81,14 @@ export const nodeOutputs = (
 };
 
 export type RawKeyValueInputItems = {
+	testRunName?: string;
 	testRun: {
 		keyValueData: Array<{ key: string; value: string }>;
 	};
 };
 
 export interface RawJsonInput {
+	testRunName?: string;
 	jsonTestRun: string;
 }
 
@@ -125,6 +128,8 @@ export interface TestTriggerParameters {
 export interface UnitTestMetaData {
 	pass?: boolean;
 	testId?: string;
+	testRunName?: string;
+	triggerInputData?: TriggerJsonData;
 }
 
 export function getReturnNodeJsonFromKeyValue(
@@ -135,16 +140,21 @@ export function getReturnNodeJsonFromKeyValue(
 	if (rawKeyValueData === undefined) {
 		return [];
 	}
-	const unitTestMetadata: UnitTestMetaData = { testId: testId };
 
 	return rawKeyValueData.map((item) => {
 		const jsonObject: { [key: string]: string } = {};
 		if (Object.keys(item.testRun).length === 0) {
 			return { json: {} };
 		}
+
 		item.testRun.keyValueData.forEach(({ key, value }) => {
 			jsonObject[key] = value;
 		});
+		const unitTestMetadata: UnitTestMetaData = {
+			testId: testId,
+			testRunName: item.testRunName || 'unnamed',
+			triggerInputData: jsonObject,
+		};
 		return {
 			json: {
 				...jsonObject,
@@ -163,16 +173,21 @@ export function getReturnNodeJsonFromJson(
 		return [];
 	}
 
-	const unitTestMetadata: UnitTestMetaData = { testId: testId };
-
 	return rawJsonInputData.map((item: RawJsonInput) => {
 		let parsedJson: TriggerJsonData;
+
 		try {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			parsedJson = JSON.parse(item.jsonTestRun);
 		} catch (e) {
 			throw e;
 		}
+
+		const unitTestMetadata: UnitTestMetaData = {
+			testId: testId,
+			testRunName: item.testRunName || 'unnamed',
+			triggerInputData: parsedJson,
+		};
 		return {
 			json: {
 				...parsedJson,
@@ -229,7 +244,7 @@ export function getTriggerTestMetaData(
 			// triggerTestId from the correct trigger
 			triggerMetaData = n.evaluateExpression(
 				`{{ $('${triggerNode.name}').item.json._unitTest }}`,
-				0,
+				itemIndex,
 			) as UnitTestMetaData;
 
 			// ensures the trigger is the same id as the current node
@@ -246,5 +261,6 @@ export function getTriggerTestMetaData(
 			itemIndex,
 		});
 	}
+
 	return triggerMetaData;
 }
