@@ -24,8 +24,10 @@ RUN NODE_ENV=production pnpm --filter=n8n --prod --no-optional deploy /compiled
 FROM n8nio/base:${NODE_VERSION}
 ENV NODE_ENV=production
 
-ARG N8N_RELEASE_TYPE=dev
-ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
+# getting prod release for testing.
+# doing remotly cause easier to get on vps
+# ARG N8N_RELEASE_TYPE=dev
+# ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
 
 WORKDIR /home/node
 COPY --from=builder /compiled /usr/local/lib/node_modules/n8n
