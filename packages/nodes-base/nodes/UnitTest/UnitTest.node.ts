@@ -19,6 +19,7 @@ import {
 	failBranchDefault,
 	throwOnFailConst,
 	UnitTestMetaData,
+	getTriggerTestMetaData,
 } from './GenericFunctions';
 
 export class UnitTest implements INodeType {
@@ -54,6 +55,7 @@ export class UnitTest implements INodeType {
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const evaluationType = this.getNodeParameter('operation', 0) as string;
+		const testId = this.getNodeParameter('testId', 0) as string;
 
 		// mutable var for test pass/fail
 		let pass = false;
@@ -70,8 +72,8 @@ export class UnitTest implements INodeType {
 				try {
 					// set val of item for better readability
 					item = items[itemIndex];
-
-					console.log(JSON.stringify(this.getParentNodes('Format First Name Test Evaluation')));
+					const triggerTestMetaData = getTriggerTestMetaData(this, testId, itemIndex);
+					console.log(`metadata: ${JSON.stringify(triggerTestMetaData)}`);
 
 					// set throwOnFail param. is a nasty ternary to get const
 					const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
@@ -153,6 +155,7 @@ export class UnitTest implements INodeType {
 			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 				try {
 					item = items[itemIndex];
+					const triggerTestMetaData = getTriggerTestMetaData(this, testId, itemIndex);
 
 					// set throwOnFail param. is a nasty ternary to get const
 					const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail

@@ -56,14 +56,15 @@ export class UnitTestTrigger implements INodeType {
 		// {"testId":"fhut6r5e","notice":"","testData":{"testDataKeyValueGroups":[{"testRun":{"keyValueData":[{"key":"thing","value":"thang"}]}}]},"jsonTestData":{"jsonData":[{"jsonTestRun":"{\n  \"thing\": \"nahhh\"\n}"}]},"mockNodes":{}}
 		// TODO: Change all of the triggerOutputData to a util function and just pass in the params
 		const triggerOutputData: TriggerReturnData[] = [];
+		const testId = this.getNodeParameter('testId', 0) as string;
 
 		const rawKeyValueData = (this.getNodeParameter('testData') as IDataObject)
 			.testDataKeyValueGroups as RawKeyValueInputItems[];
 		const rawJsonInputData = (this.getNodeParameter('jsonTestData') as IDataObject)
 			.jsonData as RawJsonInput[];
 
-		const keyValueData = getReturnNodeJsonFromKeyValue(rawKeyValueData);
-		const jsonData = getReturnNodeJsonFromJson(rawJsonInputData);
+		const keyValueData = getReturnNodeJsonFromKeyValue(rawKeyValueData, testId);
+		const jsonData = getReturnNodeJsonFromJson(rawJsonInputData, testId);
 
 		triggerOutputData.push(...keyValueData);
 		triggerOutputData.push(...jsonData);

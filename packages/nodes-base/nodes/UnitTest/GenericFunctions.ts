@@ -4,7 +4,7 @@ import type {
 	INodeParameters,
 	IDataObject,
 } from 'n8n-workflow';
-import { NodeConnectionType, NodeHelpers } from 'n8n-workflow';
+import { NodeConnectionType, NodeHelpers, NodeOperationError } from 'n8n-workflow';
 
 export const nodeInputs = (parameters: INodeParameters) => {
 	// get the current parameter `operation` from the node
@@ -96,9 +96,7 @@ export interface MockNodeInput {
 }
 
 type TriggerJsonData = {
-	[key: string]: string | ComplexJsonData;
-} & {
-	_unitTest?: UnitTestMetaData;
+	[key: string]: string | ComplexJsonData | UnitTestMetaData;
 };
 
 export type TriggerReturnData = {
@@ -126,15 +124,18 @@ export interface TestTriggerParameters {
 
 export interface UnitTestMetaData {
 	pass?: boolean;
+	testId?: string;
 }
 
 export function getReturnNodeJsonFromKeyValue(
 	rawKeyValueData: RawKeyValueInputItems[],
+	testId: string,
 ): TriggerReturnData[] {
 	//return nothing if there is no input
 	if (rawKeyValueData === undefined) {
 		return [];
 	}
+	const unitTestMetadata: UnitTestMetaData = { testId: testId };
 
 	return rawKeyValueData.map((item) => {
 		const jsonObject: { [key: string]: string } = {};
@@ -144,15 +145,25 @@ export function getReturnNodeJsonFromKeyValue(
 		item.testRun.keyValueData.forEach(({ key, value }) => {
 			jsonObject[key] = value;
 		});
-		return { json: jsonObject };
+		return {
+			json: {
+				...jsonObject,
+				_unitTest: unitTestMetadata,
+			},
+		};
 	});
 }
 
-export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): TriggerReturnData[] {
+export function getReturnNodeJsonFromJson(
+	rawJsonInputData: RawJsonInput[],
+	testId: string,
+): TriggerReturnData[] {
 	//return nothing if there is no input
 	if (rawJsonInputData === undefined) {
 		return [];
 	}
+
+	const unitTestMetadata: UnitTestMetaData = { testId: testId };
 
 	return rawJsonInputData.map((item: RawJsonInput) => {
 		let parsedJson: TriggerJsonData;
@@ -162,7 +173,12 @@ export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): Tri
 		} catch (e) {
 			throw e;
 		}
-		return { json: parsedJson };
+		return {
+			json: {
+				...parsedJson,
+				_unitTest: unitTestMetadata,
+			},
+		};
 	});
 }
 
@@ -190,4 +206,45 @@ export function getNodeInputsData(this: IExecuteFunctions) {
 	}
 
 	return returnData;
+}
+
+export function getTriggerTestMetaData(
+	n: IExecuteFunctions,
+	testId: string,
+	itemIndex: number,
+): UnitTestMetaData {
+	const testTriggerNodes = n
+		.getParentNodes(n.getNode().name)
+		.filter((node) => node.type === 'n8n-nodes-base.unitTestTrigger');
+
+	// define trigger name to be assigned during loop
+	let triggerName: string;
+	let triggerMetaData: UnitTestMetaData;
+
+	for (const triggerNode of testTriggerNodes) {
+		try {
+			// this tries to access the trigger data from each
+			// unit test trigger. This will fail on any trigger
+			// that hasn't run, so it will only output the
+			// triggerTestId from the correct trigger
+			triggerMetaData = n.evaluateExpression(
+				`{{ $('${triggerNode.name}').item.json._unitTest }}`,
+				0,
+			) as UnitTestMetaData;
+
+			// ensures the trigger is the same id as the current node
+			if (triggerMetaData?.testId === testId) {
+				// sets our var if it is the right ID
+				triggerName = triggerNode.name;
+			}
+		} catch (e) {} // any incorrect triggers die in the catch block
+	}
+
+	// throws an error if no trigger was found
+	if (triggerName! === undefined || !triggerMetaData!) {
+		throw new NodeOperationError(n.getNode(), 'No Test Trigger Node with matching ID found', {
+			itemIndex,
+		});
+	}
+	return triggerMetaData;
 }
