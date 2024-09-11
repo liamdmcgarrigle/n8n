@@ -1,5 +1,10 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { cleanUpBranchDefault, failBranchDefault, throwOnFailConst } from './GenericFunctions';
+import {
+	cleanUpBranchDefault,
+	failBranchDefault,
+	throwOnFailConst,
+	disableOnFailConst,
+} from './GenericFunctions';
 
 // --------------------------------------------
 // --------TRIGGER AND EVALUATION NODES--------
@@ -350,7 +355,7 @@ export const additionalFields: INodeProperties[] = [
 				displayName: 'Disable Workflow on Fail?',
 				name: 'disableWorkflowOnFailEnabled',
 				type: 'boolean',
-				default: false,
+				default: disableOnFailConst, // only edit this value in the `/GenericFunctions.ts` file
 				description: 'Whether to disable the workflow on fail',
 			},
 			...autoRunOptions,

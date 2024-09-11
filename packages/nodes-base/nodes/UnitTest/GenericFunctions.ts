@@ -5,7 +5,6 @@ import type {
 	IDataObject,
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeHelpers, NodeOperationError } from 'n8n-workflow';
-import { combineConditionsCollection } from '../MySql/v2/actions/common.descriptions';
 
 export const nodeInputs = (parameters: INodeParameters) => {
 	// get the current parameter `operation` from the node
@@ -35,6 +34,7 @@ export const throwOnFailConst: boolean = false;
 // these values are used in the `nodeOutputs` function below as well as in the node config
 export const cleanUpBranchDefault: boolean = false;
 export const failBranchDefault: boolean = true;
+export const disableOnFailConst: boolean = false;
 
 export const nodeOutputs = (
 	parameters: INodeParameters,

@@ -20,6 +20,7 @@ import {
 	throwOnFailConst,
 	UnitTestMetaData,
 	getTriggerTestMetaData,
+	disableOnFailConst,
 } from './GenericFunctions';
 
 export class UnitTest implements INodeType {
@@ -214,6 +215,24 @@ export class UnitTest implements INodeType {
 		// 		}
 		// 	}
 		// }
+
+		//
+		// DEACTIVATE ON FAIL
+		// not going to do yet, will just use an n8n node for now
+		//
+
+		// TODO: change from hardcoded index so people can use expressions for this
+		// is a nasty ternary to get const
+		const deactivateOnFail = this.getNodeParameter('additionalFields', 0)
+			.disableWorkflowOnFailEnabled
+			? this.getNodeParameter('additionalFields', 0).disableWorkflowOnFailEnabled
+			: disableOnFailConst;
+
+		if (deactivateOnFail) {
+			if (failedArray.length > 0) {
+				// TODO: add logic for deactivate on fail
+			}
+		}
 
 		//
 		// CHECKS WHICH BRANCHES SHOULD OUTPUT

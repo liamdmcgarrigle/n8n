@@ -58,6 +58,11 @@ import type { BaseTextKey } from '@/plugins/i18n';
 import { useNpsSurveyStore } from '@/stores/npsSurvey.store';
 import { useLocalStorage } from '@vueuse/core';
 
+import { useRunWorkflow } from '@/composables/useRunWorkflow';
+
+const router = useRouter();
+const { onSaveUnitTestRuns } = useRunWorkflow({ router });
+
 const props = defineProps<{
 	workflow: IWorkflowDb;
 	readOnly?: boolean;
@@ -76,7 +81,7 @@ const workflowsStore = useWorkflowsStore();
 const projectsStore = useProjectsStore();
 const npsSurveyStore = useNpsSurveyStore();
 
-const router = useRouter();
+
 const route = useRoute();
 
 const locale = useI18n();
@@ -247,6 +252,8 @@ async function onSaveButtonClick() {
 	if (isWorkflowSaving.value) {
 		return;
 	}
+
+	onSaveUnitTestRuns();
 
 	const id = getWorkflowId();
 
