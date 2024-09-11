@@ -97,6 +97,8 @@ export interface MockNodeInput {
 
 type TriggerJsonData = {
 	[key: string]: string | ComplexJsonData;
+} & {
+	_unitTest?: UnitTestMetaData;
 };
 
 export type TriggerReturnData = {
@@ -124,7 +126,7 @@ export interface TestTriggerParameters {
 
 export interface UnitTestMetaData {
 	pass?: boolean;
-  }
+}
 
 export function getReturnNodeJsonFromKeyValue(
 	rawKeyValueData: RawKeyValueInputItems[],
@@ -166,11 +168,11 @@ export function getReturnNodeJsonFromJson(rawJsonInputData: RawJsonInput[]): Tri
 
 // TODO: Replace the functions above with the one below
 // don't actually replace them, just use those as private inside of this one
-export function prepareTestData(nodeParams: MockNodeInput): INodeExecutionData[] {
-	const returnData: INodeExecutionData[] = [];
+// export function prepareTestData(nodeParams: MockNodeInput): INodeExecutionData[] {
+// 	const returnData: INodeExecutionData[] = [];
 
-	return returnData;
-}
+// 	return returnData;
+// }
 
 export function getNodeInputsData(this: IExecuteFunctions) {
 	const returnData: INodeExecutionData[][] = [];

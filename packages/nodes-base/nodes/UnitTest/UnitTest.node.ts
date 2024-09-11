@@ -62,23 +62,22 @@ export class UnitTest implements INodeType {
 		const failedArray: INodeExecutionData[] = [];
 		const cleanUpArray: INodeExecutionData[] = [];
 
-
 		if (evaluationType === 'comparisonEvaluation') {
 			const items = this.getInputData();
-			let item: INodeExecutionData;	
-			
+			let item: INodeExecutionData;
+
 			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 				try {
 					// set val of item for better readability
 					item = items[itemIndex];
+
+					console.log(JSON.stringify(this.getParentNodes('Format First Name Test Evaluation')));
 
 					// set throwOnFail param. is a nasty ternary to get const
 					const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
 						? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
 						: throwOnFailConst;
 
-					
-					
 					pass = this.getNodeParameter('evaluations', itemIndex, false, {
 						extractValue: true,
 					}) as boolean;
@@ -103,8 +102,6 @@ export class UnitTest implements INodeType {
 							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
 						});
 					}
-
-					
 				} catch (error) {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 					if (error.context) {
@@ -120,92 +117,84 @@ export class UnitTest implements INodeType {
 			}
 		}
 
+		// evaluations for booleanInputComparison operation
+		if (evaluationType === 'booleanInputComparison') {
+			// get input data
+			const passedRuns = this.getInputData(0);
+			const failedRuns = this.getInputData(1);
 
-			// evaluations for booleanInputComparison operation
-			if (evaluationType === 'booleanInputComparison') {
+			const items: INodeExecutionData[] = [];
+			let item: INodeExecutionData;
 
-				// get input data
-				const passedRuns = this.getInputData(0);
-				const failedRuns = this.getInputData(1);
-
-				const items: INodeExecutionData[] = [];
-				let item: INodeExecutionData;
-
-
-				passedRuns.map((run) => {
-					items.push({ 
-						json: {
-							...run.json,
-							_unitTest: {
-								...((run.json._unitTest || {}) as object),
-								pass: true 
-							}
-						}
-					})
-				})
-
-				failedRuns.map((run) => {
-					items.push({ 
-						json: {
-							...run.json,
-							_unitTest: {
-								...((run.json._unitTest || {}) as object),
-								pass: false 
-							}
-						}
-					})
+			passedRuns.map((run) => {
+				items.push({
+					json: {
+						...run.json,
+						_unitTest: {
+							...((run.json._unitTest || {}) as object),
+							pass: true,
+						},
+					},
 				});
+			});
 
+			failedRuns.map((run) => {
+				items.push({
+					json: {
+						...run.json,
+						_unitTest: {
+							...((run.json._unitTest || {}) as object),
+							pass: false,
+						},
+					},
+				});
+			});
 
+			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+				try {
+					item = items[itemIndex];
 
-				for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-					try {
-						item = items[itemIndex];
+					// set throwOnFail param. is a nasty ternary to get const
+					const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+						? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
+						: throwOnFailConst;
 
-						// set throwOnFail param. is a nasty ternary to get const
-						const throwOnFail = this.getNodeParameter('additionalFields', itemIndex).errorOnFail
-							? this.getNodeParameter('additionalFields', itemIndex).errorOnFail
-							: throwOnFailConst;
-						
-						pass = (item.json._unitTest as UnitTestMetaData).pass as boolean;
+					pass = (item.json._unitTest as UnitTestMetaData).pass as boolean;
 
-						if (!pass) {
-							failedArray.push({
-								json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
-							});
+					if (!pass) {
+						failedArray.push({
+							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+						});
 
-							cleanUpArray.push({
-								json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
-							});
+						cleanUpArray.push({
+							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+						});
 
-							// throw error if set to fail
-							if (throwOnFail) {
-								throw new NodeOperationError(this.getNode(), 'Test Failed', {
-									itemIndex,
-								});
-							}
-						} else {
-							cleanUpArray.push({
-								json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
+						// throw error if set to fail
+						if (throwOnFail) {
+							throw new NodeOperationError(this.getNode(), 'Test Failed', {
+								itemIndex,
 							});
 						}
-
-					} catch (error) {
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-						if (error.context) {
-							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-							error.context.itemIndex = itemIndex;
-							throw error;
-						}
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-						throw new NodeOperationError(this.getNode(), error, {
-							itemIndex,
+					} else {
+						cleanUpArray.push({
+							json: { ...item.json, unitTestPass: pass ? 'true' : 'false' },
 						});
 					}
+				} catch (error) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					if (error.context) {
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+						error.context.itemIndex = itemIndex;
+						throw error;
+					}
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+					throw new NodeOperationError(this.getNode(), error, {
+						itemIndex,
+					});
 				}
-
 			}
-		
+		}
 
 		//
 		// CHECKS WHICH BRANCHES SHOULD OUTPUT
