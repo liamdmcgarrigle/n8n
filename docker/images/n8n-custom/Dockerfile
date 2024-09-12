@@ -28,6 +28,7 @@ ENV NODE_ENV=production
 # doing remotly cause easier to get on vps
 # ARG N8N_RELEASE_TYPE=dev
 # ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
+ENV N8N_RELEASE_TYPE=stable 
 
 WORKDIR /home/node
 COPY --from=builder /compiled /usr/local/lib/node_modules/n8n
