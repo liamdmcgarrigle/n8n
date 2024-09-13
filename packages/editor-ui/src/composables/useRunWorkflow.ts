@@ -36,6 +36,7 @@ import { isEmpty } from '@/utils/typesUtils';
 import { useI18n } from '@/composables/useI18n';
 import { get } from 'lodash-es';
 import { useExecutionsStore } from '@/stores/executions.store';
+import { nodes } from 'jsonpath';
 
 export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof useRouter> }) {
 	const nodeHelpers = useNodeHelpers();
@@ -269,10 +270,14 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 				options.destinationNode,
 			);
 
-			// sets the new destination node to the very last node down stream of the original destinationNode.
-			// this currently does not take into account if you have the two output branches enabled, it will
-			// only work the bottom one
-			options.destinationNode = downStreamNodes[0];
+			// only change downstream node if it's not empty
+			// otherwise it will break the start and end node
+			if (downStreamNodes.length > 0) {
+				// sets the new destination node to the very last node down stream of the original destinationNode.
+				// this currently does not take into account if you have the two output branches enabled, it will
+				// only work the bottom one
+				options.destinationNode = downStreamNodes[0];
+			}
 
 			// TODO: have this implementation include both branches somehow
 			// right now it will only output to one branch.
