@@ -256,8 +256,28 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 	}): Promise<IExecutionPushResponse | undefined> {
 		const workflow = workflowHelpers.getCurrentWorkflow();
 
-		if (uiStore.isActionActive['workflowRunning']) {
+		if (uiStore.isActionActive.workflowRunning) {
 			return;
+		}
+
+		// changes the destination node if it is a test
+		if (options.unitTest && options.destinationNode) {
+			// finds the downstream nodes of the current `destinationNode`
+			const downStreamNodes = workflowHelpers.getConnectedNodes(
+				'downstream',
+				workflow,
+				options.destinationNode,
+			);
+
+			// sets the new destination node to the very last node down stream of the original destinationNode.
+			// this currently does not take into account if you have the two output branches enabled, it will
+			// only work the bottom one
+			options.destinationNode = downStreamNodes[0];
+
+			// TODO: have this implementation include both branches somehow
+			// right now it will only output to one branch.
+			//
+			// you can get around this limitation right now by putting a do nothing node at the end of both output branches
 		}
 
 		titleSet(workflow.name as string, 'EXECUTING');

@@ -11,6 +11,7 @@ import {
 	comparisonEvaluationFields,
 	booleanEvaluationFields,
 	additionalFields,
+	outputBranchBugWarning,
 } from './UnitTestDescriptions';
 import {
 	nodeInputs,
@@ -50,6 +51,8 @@ export class UnitTest implements INodeType {
 			...booleanEvaluationFields,
 
 			...additionalFields,
+
+			...outputBranchBugWarning,
 		],
 	};
 

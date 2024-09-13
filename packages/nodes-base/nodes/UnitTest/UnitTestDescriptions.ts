@@ -351,14 +351,25 @@ export const additionalFields: INodeProperties[] = [
 				description:
 					'Whether to show a branch that runs after the test and can be used for cleanup/teardown. Example usage would be to delete additions to external services, like deleting a test contact creation.',
 			},
-			{
-				displayName: 'Disable Workflow on Fail?',
-				name: 'disableWorkflowOnFailEnabled',
-				type: 'boolean',
-				default: disableOnFailConst, // only edit this value in the `/GenericFunctions.ts` file
-				description: 'Whether to disable the workflow on fail',
-			},
+			// TODO: Get disable on fail working
+			// {
+			// 	displayName: 'Disable Workflow on Fail?',
+			// 	name: 'disableWorkflowOnFailEnabled',
+			// 	type: 'boolean',
+			// 	default: disableOnFailConst, // only edit this value in the `/GenericFunctions.ts` file
+			// 	description: 'Whether to disable the workflow on fail',
+			// },
 			...autoRunOptions,
 		],
+	},
+];
+
+export const outputBranchBugWarning: INodeProperties[] = [
+	{
+		displayName:
+			'WARNING:<br><br>Due to a current limitation in the implementation, the cleanup and error output branches will not both run (without a work around).<br><br>The temporary workaround is to place a "No Operation (do nothing)" node at the end of both branches. This will allow it to function as expected.',
+		name: 'notice',
+		type: 'notice',
+		default: '',
 	},
 ];
