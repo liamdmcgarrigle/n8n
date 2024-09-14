@@ -416,6 +416,62 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 				startRunData.destinationNode = options.destinationNode;
 			}
 
+			if (!options.unitTest) {
+				// Filter out all nodes that are not unit tests and store them in 'nonTestNodes'
+				const nonTestNodes = workflowData.nodes.filter(
+					(node) => node.type !== 'n8n-nodes-base.unitTest',
+				);
+
+				// Filter out all unit test nodes and store them in 'testNodes'
+				const testNodes = workflowData.nodes.filter(
+					(node) => node.type === 'n8n-nodes-base.unitTest',
+				);
+
+				// Extract the names of all unit test nodes and store them in 'testNodeNames'
+				const testNodeNames = [];
+				for (const testNodeName of testNodes) {
+					testNodeNames.push(testNodeName.name);
+				}
+
+				// Make a reference to the original connections object from 'workflowData'
+				let originalConnections = workflowData.connections;
+
+				// Get an array of node names (used as keys in the connection objs) that have connections
+				const nodeConnections = Object.keys(workflowData.connections);
+
+				// Iterate over each node that has connections
+				for (const node of nodeConnections) {
+					// this is just incase it has multiple outputs
+
+					// Get all branches (output connections) for the current node
+					const branches = Object.keys(originalConnections[node]);
+
+					// Iterate over each branch (output connection) of the current node
+					for (const branchName of branches) {
+						// Get the array of connections for this branch
+
+						const branch = originalConnections[node][branchName];
+
+						// 'branch' is an array where each element represents a connection point
+						branch.forEach((element, index) => {
+							// 'element' is an array of connection objects
+							element.forEach((el, ind) => {
+								// Check if the connected node is a unit test node
+								if (testNodeNames.includes(el.node)) {
+									// Remove the connection to the unit test node
+									originalConnections[node][branchName][index].splice(ind, 1);
+								}
+							});
+						});
+					}
+				}
+
+				const nonTestConnections = originalConnections;
+
+				workflowData.nodes = nonTestNodes;
+				workflowData.connections = nonTestConnections;
+			}
+
 			// Init the execution data to represent the start of the execution
 			// that data which gets reused is already set and data of newly executed
 			// nodes can be added as it gets pushed in
