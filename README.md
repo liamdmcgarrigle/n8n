@@ -1,3 +1,4 @@
+# Bugs/Development
 > 🛑 This is currently a prototype that is not ready for production. 🛑
 
 In my rush to release this for the n8n community event on September 18th, I released it before I normally would, with a few fatal bugs.
@@ -23,4 +24,22 @@ In my rush to release this for the n8n community event on September 18th, I rele
 - Add a button in the node submenu that adds a unit test properly placed around the node
 - Add to n8n's current translation framework so the text is localized 
 
-Thank you for taking the time to check out my project
+# How To Use
+To use this version of n8n with unit tests, simply use my public docker image `liammcgarrigle/n8n-with-unit-tests` in any docker command that normally works with n8n's docker image.
+
+Docker Run:
+```
+docker volume create n8n_data
+
+docker run -it --rm --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n liammcgarrigle/n8n-with-unit-tests
+```
+Docker Compose (with clipped file):  \
+*docker-compose.yaml*
+```yaml
+...
+n8n:
+    image: liammcgarrigle/n8n-with-unit-tests
+    restart: always
+    ports:
+...
+```
